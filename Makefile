@@ -34,7 +34,7 @@ CLOUD_FILES := $(wildcard *.in)
 TOOL_FILES := Makefile $(wildcard *.sh)
 CLOUD_CONFIG := cloud-fulldev-config.yaml
 DIST_DIR := mptools
-DIST_VERSION := 1.0.0
+DIST_VERSION := 1.0.1
 
 all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 
