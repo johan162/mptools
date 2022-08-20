@@ -20,7 +20,6 @@ if [[ -f ${HOME}/.zshenv ]]; then
   grep 'alias mp="multipass"' ${HOME}/.zshenv > /dev/null
   if [[ $? -eq 0 ]]; then
     echo "Aliases will not be added to .zshenv as they have already been added."
-    exit 0
   else
     cat << EOF >> ${HOME}/.zshenv
 # ===========================================
@@ -37,8 +36,20 @@ alias mpi="multipass info"
 alias mpia="multipass info --all"
 EOF
   fi
+  grep 'export SSH_PUBLIC_KEY"' ${HOME}/.zshenv > /dev/null
+  if [[ $? -eq 0 ]]; then
+      echo "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
+    else
+      cat << EOF >> ${HOME}/.zshenv
+# ===========================================
+# Automatically added by mpinstall.sh
+# User SSH key
+# ===========================================
+export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
+EOF
 fi
 
+# Now do the install through homebrew
 # Find out if we are running on Intel or M1
 if [[ $(uname -m) == 'x86_64' ]]; then
   # Switch from hyperkit to qemu in order for efficiency and be able
@@ -50,4 +61,8 @@ else
   # On M1 qemu is already used so we just install it
   brew install --cask multipass
 fi
+
+echo "=========================="
+echo "multipass setup completed."
+echo "=========================="
 
