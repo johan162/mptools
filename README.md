@@ -15,16 +15,11 @@ that the current user have a set of SSH keys.***
    ./mpinstall.sh
    ```    
    **Note:** If `multipass` is already installed a warning will be printed.   
-
-   
-2. Add the following environment variable to the current users `~/.zshenv` 
-    ```shell
-    export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
-    ```
-   and source your `.zshenv` file.     
+   **Note:** The installation script will also add SSH_PUBLIC_KEY environment variable
+   needed for proper cloud init file configuration.   
 
 
-3. Create and start the default three default nodes `ub18n01`, `ub20n01`, and `ub22n01` by
+2. Create and start the default three default nodes `ub18n01`, `ub20n01`, and `ub22n01` by
    running the makefile as 
     ```shell
     make nodes
