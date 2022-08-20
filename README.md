@@ -1,8 +1,31 @@
 # mptools
 
-A set of utility script to both install `multipass` and create `multipass` 
+A set of utility script for MacOS to both install `multipass` and create `multipass` 
 nodes initialized from a cloud config file. 
 
+## Current version
+v1.0.0
+
+# <TL/DR>
+
+***Note: Make sure you have [homebrew](https://brew.sh/)  installed.*** 
+
+1. If you do do not already have `multipass` then Install `multipass` by running
+    ```shell
+   ./mpinstall.sh
+   ```   
+     
+2. Add the following to your `.zshenv` 
+    ```shell
+    export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
+    ```
+   and source your `.zshenv` file.    
+    
+3. Create and start the three default nodes `ub18n01`, `ub20n01`, and `ub22n01` by
+   running the makefile as 
+    ```shell
+    make nodes
+    ```
 
 
 ## Installing multipass
@@ -112,3 +135,21 @@ For example.To create a slightly bigger node (with a custom name) to run a Jenki
 ```
 
 This will create (and start) a new node with 1GB memory named "jenkins" 
+
+## Aliases
+
+After the install-script has been run the following shell aliases will be available
+to save some typing.
+
+```shell
+alias mp="multipass"
+alias mpl="multipass list"
+alias mps="multipass shell"
+alias mpe="multipass exec"
+alias mpd="multipass delete -p"
+alias mpp="multipass purge"
+alias mpi="multipass info"
+alias mpia="multipass info --all"
+```
+
+These can of course e also be added manually.
