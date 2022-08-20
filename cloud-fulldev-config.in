@@ -1,0 +1,68 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+  - name: bld
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+  - name: ${USER}
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+package_update: true
+package_upgrade: true
+packages:
+  - build-essential
+  - make
+  - gcc
+  - autoconf
+  - automake
+  - libtool
+  - libreadline-dev
+  - libusb-1.0 
+  - libpcre3-dev 
+  - libsqlite3-dev 
+  - libcurl4-openssl-dev
+  - libhpdf-dev
+  - libjansson-dev
+  - docbook5-xml 
+  - docbook-xsl-ns 
+  - libxml2-utils 
+  - libxml2-dev 
+  - fop 
+  - xsltproc 
+  - cloc 
+  - links
+  - doxygen
+  - graphviz
+  - default-jdk
+  - texlive
+
+
+runcmd:
+  - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  - sudo apt-get install -yq nodejs
+  - sudo npm install -g npm
+  - sudo npm install -g vtop
+  - sudo npm install -g gtop
+  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
+  - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | sudo tar xz > gotop && sudo install gotop /usr/local/bin && rm gotop
+  - sudo mkdir /var/jenkins_home
+  - sudo chown bld:bld /var/jenkins_home
+
+  
+

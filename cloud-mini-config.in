@@ -1,0 +1,35 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+  - name: bld
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+  - name: ${USER}
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ssh-rsa ${SSH_PUBLIC_KEY}
+
+package_update: true
+package_upgrade: true
+ 
+runcmd:
+#  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
+  - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | tar xz > gotop && install gotop /usr/local/bin && rm gotop
+
+  
+  
+
