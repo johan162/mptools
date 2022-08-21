@@ -26,7 +26,7 @@
 # All tools released under MIT License. See LICENSE file
 # ==============================================================================================
 
-MAKEFLAGS += --silent
+# MAKEFLAGS += --silent
 
 ALL_NODES := ub22n01 ub20n01 ub18n01
 
@@ -34,7 +34,7 @@ CLOUD_FILES := $(wildcard *.in)
 TOOL_FILES := Makefile $(wildcard *.sh)
 CLOUD_CONFIG := cloud-fulldev-config.yaml
 DIST_DIR := mptools
-DIST_VERSION := 1.0.1
+DIST_VERSION := 1.0.2
 
 all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 

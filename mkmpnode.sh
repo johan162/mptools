@@ -121,6 +121,13 @@ while [[ $OPTIND -le "$#" ]]; do
     fi
 done
 
+if [[ -z $nodeName ]]; then
+  errlog "Nodename not specified"
+  usage $1
+  exit 1
+fi
+
+
 if multipass list | grep $nodeName >/dev/null; then
     VM_STATE=$(multipass info $nodeName | grep -i State)
     case "${VM_STATE}" in
@@ -154,9 +161,8 @@ else
 
     infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
     multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
-    exit 1
 
-    if [[ ! $? -eq 0 ]]; then
+    if [[ $? -ne 0 ]]; then
       errlog "Failed to create node!"
       exit 1
     fi

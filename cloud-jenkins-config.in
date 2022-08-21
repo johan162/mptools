@@ -1,0 +1,40 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+  - name: ${USER}
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+package_update: true
+package_upgrade: true
+packages:
+  - build-essential
+  - default-jre
+  - bpytop
+
+
+runcmd:
+  - curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+  - echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/ | sudo tee /etc/apt/sources.list.d/jenkins.list > /dev/null
+  - sudo apt update
+  - sudo apt install -qy jenkins
+
+
+
+
+
+
+
+  
+

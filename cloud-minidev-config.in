@@ -3,7 +3,7 @@ users:
   - default
   - name: ubuntu
     ssh_authorized_keys:
-      - ssh-rsa ${SSH_PUBLIC_KEY}
+      - ${SSH_PUBLIC_KEY}
 
   - name: bld
     gecos: cloud builder
@@ -21,7 +21,7 @@ users:
     groups: users, admin
     lock_passwd: false
     ssh_authorized_keys:
-      - ssh-rsa ${SSH_PUBLIC_KEY}
+      - ${SSH_PUBLIC_KEY}
 
 package_update: true
 package_upgrade: true
@@ -32,13 +32,13 @@ packages:
   - autoconf
   - automake
   - libtool
+  - default-jdk
 
 
 runcmd:
-#  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
   - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | sudo tar xz > gotop && sudo install gotop /usr/local/bin && rm gotop
   - sudo mkdir /var/jenkins_home
   - sudo chown bld:bld /var/jenkins_home
-
+#  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
   
 

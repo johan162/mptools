@@ -3,7 +3,7 @@ users:
   - default
   - name: ubuntu
     ssh_authorized_keys:
-      - ssh-rsa ${SSH_PUBLIC_KEY}
+      - ${SSH_PUBLIC_KEY}
 
   - name: bld
     gecos: cloud builder
@@ -12,7 +12,7 @@ users:
     groups: users, admin
     lock_passwd: false
     ssh_authorized_keys:
-      - ssh-rsa ${SSH_PUBLIC_KEY}
+      - ${SSH_PUBLIC_KEY}
 
   - name: ${USER}
     gecos: cloud builder
@@ -21,7 +21,7 @@ users:
     groups: users, admin
     lock_passwd: false
     ssh_authorized_keys:
-      - ssh-rsa ${SSH_PUBLIC_KEY}
+      - ${SSH_PUBLIC_KEY}
 
 package_update: true
 package_upgrade: true
@@ -50,19 +50,17 @@ packages:
   - doxygen
   - graphviz
   - default-jdk
-  - texlive
 
 
 runcmd:
   - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
   - sudo apt-get install -yq nodejs
-  - sudo npm install -g npm
-  - sudo npm install -g vtop
-  - sudo npm install -g gtop
-  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
+  - sudo npm install -gy npm
+  - sudo npm install -gy vtop
+  - sudo npm install -gy gtop
   - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | sudo tar xz > gotop && sudo install gotop /usr/local/bin && rm gotop
   - sudo mkdir /var/jenkins_home
   - sudo chown bld:bld /var/jenkins_home
-
+# - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
   
 

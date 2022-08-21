@@ -33,6 +33,8 @@ alias mpe="multipass exec"
 alias mpd="multipass delete -p"
 alias mpp="multipass purge"
 alias mpi="multipass info"
+alias mpstopa="multipass stop --all"
+alias mpsta="multipass start --all"
 alias mpia="multipass info --all"
 EOF
   fi
