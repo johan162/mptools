@@ -11,14 +11,19 @@
 #
 # Supported targets:
 #
-# (default)	all		Create proper Cloud Config Files from the *.in  templates by
-#					expanding all environment variables.
-# nodes				Create and start all predefined nodes named in $(ALL_NODES)
-#					i.e. ub22n01 ub20n01 ub18n01
+# (default)	all	    Create proper Cloud Config Files from the *.in  templates by
+#                   expanding all environment variables.
+#
+# nodes	            Create and start all predefined nodes named in $(NODES)
+#                   i.e. ub22n01 ub20n01 ub18n01
+#
+# clean				Delete created YAML-files
+#
+# distclean			clean + remove created tar-ball restores the cloned repo
 #
 # By using the syntax as exemplified by:
 #
-#        make -n ALL_NODES="ub22n01 ub22n02 ub22n03" nodes
+#     make NODES="ub22n01 ub22n02 ub22n03" node
 #
 # one can dynamically create nodes without changing the Makefile
 #
@@ -28,28 +33,28 @@
 
 # MAKEFLAGS += --silent
 
-ALL_NODES := ub22n01 ub20n01 ub18n01
+NODES := ub22n01 ub20n01 ub18n01
 
-CLOUD_FILES := $(wildcard *.in)
+CLOUD_FILES := $(wildcard cloud/*.in)
 TOOL_FILES := Makefile $(wildcard *.sh)
-CLOUD_CONFIG := cloud-fulldev-config.yaml
+CLOUD_CONFIG := cloud/fulldev-config.yaml
 DIST_DIR := mptools
-DIST_VERSION := 1.0.2
+DIST_VERSION := 1.1.0
 
 all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 
-nodes: $(ALL_NODES)
+node: $(NODES)
 
 %.yaml : %.in
 	cat $< | envsubst > $@
 
-$(filter ub22%,$(ALL_NODES)): $(CLOUD_CONFIG)
+$(filter ub22%,$(NODES)): $(CLOUD_CONFIG)
 	./mkmpnode.sh -r jammy -c $(CLOUD_CONFIG) $@
 
-$(filter ub20%,$(ALL_NODES)): $(CLOUD_CONFIG)
+$(filter ub20%,$(NODES)): $(CLOUD_CONFIG)
 	./mkmpnode.sh -r focal -c $(CLOUD_CONFIG) $@
 
-$(filter ub18%,$(ALL_NODES)): $(CLOUD_CONFIG)
+$(filter ub18%,$(NODES)): $(CLOUD_CONFIG)
 	./mkmpnode.sh -r bionic -c $(CLOUD_CONFIG) $@
 
 clean:
@@ -58,7 +63,6 @@ clean:
 distclean: clean
 	rm -rf $(DIST_DIR)-$(DIST_VERSION).tar.gz
 	rm -rf $(DIST_DIR)
-
 
 $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 	rm -rf $(DIST_DIR)
@@ -72,4 +76,4 @@ $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 
 dist: $(DIST_DIR)-$(DIST_VERSION).tar.gz
 
-.PHONY: all clean nodes dist distclean $(ALL_NODES)
+.PHONY: all clean nodes dist distclean $(NODES)

@@ -22,19 +22,19 @@ that the current user have a set of SSH keys.***
 2. Create and start the default three default nodes `ub18n01`, `ub20n01`, and `ub22n01` by
    running the makefile as 
     ```shell
-    make nodes
+    make node
     ```
    It is possible to customize the nodes created by either editing the `$ALL_NODES` variable
    in the makefile or override it on the command line. So, for example to only create two
    Ubuntu 22 LTS nodes use:
 
    ```shell
-    make ALL_NODES="ub22n01 ub22n02" nodes
+    make NODES="ub22n01 ub22n02" node
     ```
 
    The equivalent to create, for example, three Ubuntu 20 LTS nodes would be
    ```shell
-    make ALL_NODES="ub20n01 ub20n02 ub20n03" nodes
+    make NODES="ub20n01 ub20n02 ub20n03" node
     ```
 
     **Note:** Please observe the naming convention so the script can figure out
@@ -65,11 +65,12 @@ node Naming convention:  **ub**<MAJOR_RELEASE>**n**<NODE_NUMBER>
 In order to create nodes a [Cloud-Init file](https://cloudinit.readthedocs.io/en/latest/) is needed to specify how the node 
 should be setup. The tool set includes three variants
 
-1. `cloud-fulldev-config.in`, A full C/C++ dev environment
-2. `cloud-minidev-config.in`, A minimal c/C++ dev environment
-3. `cloud-mini-config.in`, A minimal node with only user and SSH keys
+1. `cloud/fulldev-config.in`, A full C/C++ dev environment
+2. `cloud/minidev-config.in`, A minimal c/C++ dev environment
+3. `cloud/mini-config.in`, A minimal node with only user and SSH keys
+4. `cloud/jenkins-config.in`, A basic Jenkins node
 
-The cloud init files are created from a template `*.ini` 
+The cloud init files are created from a template `*.in` 
 with the help of a makefile
 to produce the corresponding `*.yaml` files that in turn are used to configure the nodes. 
 
@@ -94,11 +95,11 @@ The processed `*.yaml` is created by calling
 $>  make
 ```
 
-If you also want to create nodes you can call
+If you also want to create the default nodes you can call
 
 
 ```shell
-$>  make nodes
+$>  make node
 ```
 
 By default, the following three nodes are then prepared
@@ -108,14 +109,17 @@ By default, the following three nodes are then prepared
  - ub22n01 (Based on "jammy", a.k.a Ubuntu 22 LTS )
 
 These nodes are created with a full development environment based on the
-cloud init template `cloud-fulldev-config.in` which installs a complete C/C++ development environment
+cloud init template `cloud/fulldev-config.in` which installs a complete C/C++ development environment
 with some commonly used libraries. 
+
+> In order ti use any of the other `*.yaml` files the helper program `mkmpnode.sh` must be used.
+> The current makefile will always use the full development cloud config when instantiating nodes.
 
 If more nodes are needed they can be created easily by using the makefile with some 
 environment variables as 
 
 ```shell
-make ALL_NODES="ub22n02 ub22n03" nodes
+make NODES="ub22n02 ub22n03" nodes
 ```
 
 Which will create two more "jammy" (Ubuntu 22 LTS) nodes. **Please note that the naming convention 
@@ -176,6 +180,10 @@ alias mpd="multipass delete -p"
 alias mpp="multipass purge"
 alias mpi="multipass info"
 alias mpia="multipass info --all"
+alias mpstoa="multipass stop --all"
+alias mpsta="multipass start --all"
+alias mpsu="multipass suspend"
+alias mpsua="multipass suspend --all"
 ```
 
 These can of course e also be added manually. 
