@@ -11,15 +11,17 @@
 #
 # Supported targets:
 #
-# (default)	all	    Create proper Cloud Config Files from the *.in  templates by
+# (default) all     Create proper Cloud Config Files from the *.in  templates by
 #                   expanding all environment variables.
 #
 # nodes	            Create and start all predefined nodes named in $(NODES)
 #                   i.e. ub22n01 ub20n01 ub18n01
 #
-# clean				Delete created YAML-files
+# clean	            Delete created YAML-files
 #
-# distclean			clean + remove created tar-ball restores the cloned repo
+# distclean         clean + remove created tar-ball restores the cloned repo
+#
+# dist              Create distribution tar ball
 #
 # By using the syntax as exemplified by:
 #
