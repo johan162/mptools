@@ -51,8 +51,16 @@ packages:
   - graphviz
   - default-jdk
 
+write_files:
+  - content: |
+      [Time]
+      PollIntervalMinSec=10
+      PollIntervalMaxSec=30
+    path: /etc/systemd/timesyncd.conf
 
 runcmd:
+  - [ timedatectl, set-ntp, true ]
+  - [ systemctl, restart, systemd-timesyncd ]
   - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
   - sudo apt-get install -yq nodejs
   - sudo npm install -gy npm
