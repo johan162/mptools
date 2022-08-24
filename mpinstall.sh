@@ -5,21 +5,45 @@
 # Written by: Johan Persson <johan162@gmail.com>
 # All tools released under MIT License. See LICENSE file.
 # ==========================================================================
+# Print error messages in red
+red="\033[31m"
+default="\033[39m"
+
+declare quiet_flag=0
+
+# Format error message
+errlog() {
+    printf "$red*** ERROR *** "
+    printf "$@"
+    printf "$default\n"
+}
+
+# Format info message
+infolog() {
+    [[ ${quiet_flag} -eq 0 ]] && printf "$@"
+}
 
 # Check if multipass is already installed
 hash multipass > /dev/null 2>&1
 if [[ $? -eq 0 ]]; then
-  echo "multipass is already installed"
+  errlog "multipass is already installed."
   exit 0
 else
-  echo "multipass not found. Will start installation"
+  echo "multipass not found. Will start installation."
+fi
+
+# Check if brew is installed
+hash brew  > /dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  errlog "homebrew not installed. Please visit https://brew.sh/"
+  exit 0
 fi
 
 # Add some aliases to .zshenv for ease of use
 if [[ -f ${HOME}/.zshenv ]]; then
   grep 'alias mp="multipass"' ${HOME}/.zshenv > /dev/null
   if [[ $? -eq 0 ]]; then
-    echo "Aliases will not be added to .zshenv as they have already been added."
+    infolog "Aliases will not be added to .zshenv as they have already been added."
   else
     cat << EOF >> ${HOME}/.zshenv
 # ===========================================
@@ -33,14 +57,16 @@ alias mpe="multipass exec"
 alias mpd="multipass delete -p"
 alias mpp="multipass purge"
 alias mpi="multipass info"
-alias mpstopa="multipass stop --all"
+alias mpstoa="multipass stop --all"
 alias mpsta="multipass start --all"
 alias mpia="multipass info --all"
+alias mpsu="multipass suspend"
+alias mpsua="multipass suspend --all"
 EOF
   fi
   grep 'export SSH_PUBLIC_KEY"' ${HOME}/.zshenv > /dev/null
   if [[ $? -eq 0 ]]; then
-      echo "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
+      infolog "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
     else
       cat << EOF >> ${HOME}/.zshenv
 # ===========================================
@@ -64,7 +90,7 @@ else
   brew install --cask multipass
 fi
 
-echo "=========================="
-echo "multipass setup completed."
-echo "=========================="
+infolog "=========================="
+infolog "multipass setup completed."
+infolog "=========================="
 
