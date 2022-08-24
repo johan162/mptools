@@ -69,12 +69,13 @@ distclean: clean
 $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 	rm -rf $(DIST_DIR)
 	mkdir $(DIST_DIR)
-	cp Makefile $(TOOL_FILES) $(CLOUD_FILES) $(DIST_DIR)
+	cp Makefile LICENSE README.md $(TOOL_FILES) $(DIST_DIR)
+	cp -r cloud $(DIST_DIR)
 	tar zcf $(DIST_DIR)-$(DIST_VERSION).tar.gz $(DIST_DIR)
 	rm -rf $(DIST_DIR)
-	echo "======================================================"
-	echo "Created tar-ball:  $(DIST_DIR)-$(DIST_VERSION).tar.gz "
-	echo "======================================================"
+	@echo "======================================================"
+	@echo "Created tar-ball:  $(DIST_DIR)-$(DIST_VERSION).tar.gz "
+	@echo "======================================================"
 
 dist: $(DIST_DIR)-$(DIST_VERSION).tar.gz
 
