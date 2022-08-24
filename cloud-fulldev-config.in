@@ -62,13 +62,12 @@ runcmd:
   - [ timedatectl, set-ntp, true ]
   - [ systemctl, restart, systemd-timesyncd ]
   - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-  - sudo apt-get install -yq nodejs
-  - sudo npm install -gy npm
-  - sudo npm install -gy vtop
-  - sudo npm install -gy gtop
-  - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | sudo tar xz > gotop && sudo install gotop /usr/local/bin && rm gotop
-  - sudo mkdir /var/jenkins_home
-  - sudo chown bld:bld /var/jenkins_home
-# - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
+  - apt-get install -yq nodejs
+  - npm install -gy npm
+  - npm install -gy vtop
+  - npm install -gy gtop
+  - [ mkdir,  /var/jenkins_home ]
+  - [ chown, bld:bld, /var/jenkins_home ]
+
   
 

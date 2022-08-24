@@ -44,9 +44,8 @@ write_files:
 runcmd:
   - [ timedatectl, set-ntp, true ]
   - [ systemctl, restart, systemd-timesyncd ]
-  - cd /run && curl -sL https://github.com/cjbassi/gotop/releases/download/3.0.0/gotop_3.0.0_linux_amd64.tgz | sudo tar xz > gotop && sudo install gotop /usr/local/bin && rm gotop
-  - sudo mkdir /var/jenkins_home
-  - sudo chown bld:bld /var/jenkins_home
-#  - sudo DEBIAN_FRONTEND=noninteractive apt -yq upgrade
+  - [ mkdir,  /var/jenkins_home ]
+  - [ chown, bld:bld, /var/jenkins_home ]
+
   
 
