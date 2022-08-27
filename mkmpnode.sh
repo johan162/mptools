@@ -151,7 +151,7 @@ else
 
     if [[ -z $cloudInit ]]; then
         infolog "No cloud file specified. Using minidev config.\n"
-        declare cinitopt="--cloud-init cloud-minidev-config.yaml"
+        declare cinitopt="--cloud-init cloud/minidev-config.yaml"
     elif [[ -f $cloudInit ]]; then
         declare cinitopt="--cloud-init $cloudInit"
     else
