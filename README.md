@@ -322,7 +322,7 @@ Mounts:         --
 ```
 
 # Tips and Tricks
-| [back to content table ](#content)|
+| [back to content table](#content)|
 
 
 * The logfile when creating and starting nodes are stored at  
