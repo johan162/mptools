@@ -35,13 +35,35 @@
 
 # MAKEFLAGS += --silent
 
-NODES := ub22n01 ub20n01 ub18n01
+# Default nodes when making target "make node"
+NODES := ub22fs01 ub20fs01 ub18fs01
 
+# Get all our defined cloud files
 CLOUD_FILES := $(wildcard cloud/*.in)
 TOOL_FILES := Makefile $(wildcard *.sh)
-CLOUD_CONFIG := cloud/fulldev-config.yaml
+
+# Predefine cloud configs based on the infix in the node name
+CLOUD_CONFIG_F := cloud/fulldev-config.yaml
+CLOUD_CONFIG_B := cloud/mini-config.yaml
+CLOUD_CONFIG_M := cloud/minidev-config.yaml
+
+# Predefined sizes based on the infix in the node name
+MACHINE_CONFIG_S := -m 500MB -d 5GB
+MACHINE_CONFIG_M := -m 1GB -d 5GB
+MACHINE_CONFIG_L := -m 2GB -d 10GB
+MACHINE_CONFIG_X := -m 4GB -d 15GB
+MACHINE_CONFIG_H := -m 8GB -d 20GB
+
+# Predefined image names corresponding to the major Ubuntu releases as specified in the node name
+IMAGE_UB22 := jammy
+IMAGE_UB20 := focal
+IMAGE_UB18 := bionic
+
+# Record keeping for the release
 DIST_DIR := mptools
-DIST_VERSION := 1.1.0
+DIST_VERSION := 1.2.0
+
+# Rule and target sections
 
 all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 
@@ -50,14 +72,27 @@ node: $(NODES)
 %.yaml : %.in
 	cat $< | envsubst > $@
 
-$(filter ub22%,$(NODES)): $(CLOUD_CONFIG)
-	./mkmpnode.sh -r jammy -c $(CLOUD_CONFIG) $@
 
-$(filter ub20%,$(NODES)): $(CLOUD_CONFIG)
-	./mkmpnode.sh -r focal -c $(CLOUD_CONFIG) $@
+# This rule creates the given nodes according to the naming convention.
+# This requires some explanation.
+# We are extracting the markers for image, cloud cofig and machine size from the
+# name with 'cut'. Then we create the variable name of one of the predefined variables above.
+# (We need to use eval as we want the makefile variables to be evauated dynamically
+# when the rule is evaluated and not in the initial parsing.)
+# Finally we evaluate that variable indirectly to get the value specified above.
+#
+# Naming of nodes: "ub<UBUNTU VERSION><CLOUD CONFIG><MACHINE SIZE><NODE NUMBER>"
+#
+# We do a basic egrep that will fail the receipie if the node name doesn't follow
+# the correct naming convention.
 
-$(filter ub18%,$(NODES)): $(CLOUD_CONFIG)
-	./mkmpnode.sh -r bionic -c $(CLOUD_CONFIG) $@
+$(filter ub%,$(NODES)): $(CLOUD_CONFIG_F)
+	$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlxh][0-9]{2}')
+	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
+	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
+	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
+	@echo ./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
+
 
 clean:
 	rm -fr $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
