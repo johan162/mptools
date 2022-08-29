@@ -35,11 +35,11 @@ that the current user have a set of SSH keys.***
 for explanation on how to interpret the node names.
 
 # Content
-- ### [Installing multipass](#installing-multipass)
-- ### [Creating customized nodes](#creating-customized-nodes)
-- ### [Creating nodes using naming convention](#creating-nodes-using-naming-convention)
-- ### [Aliases](#aliases)
-- ### [Tips and Tricks](#tips-and-tricks)
+- [Installing multipass](#installing-multipass)
+- [Creating customized nodes](#creating-customized-nodes)
+- [Creating nodes using naming convention](#creating-nodes-using-naming-convention)
+- [Aliases](#aliases)
+- [Tips and Tricks](#tips-and-tricks)
 
 
 
