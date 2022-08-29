@@ -24,7 +24,7 @@ that the current user have a set of SSH keys.***
     ```shell
     make node
     ```
-   It is possible to customize the nodes created by either editing the `$ALL_NODES` variable
+   It is possible to customize the nodes created by either editing the `$NODES` variable
    in the makefile or override it on the command line. So, for example to only create two
    Ubuntu 22 LTS nodes use:
 
