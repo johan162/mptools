@@ -87,11 +87,11 @@ node: $(NODES)
 # the correct naming convention.
 
 $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F)
-	$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlxh][0-9]{2}')
+	@$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlxh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
-	@echo ./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
+	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
 
 
 clean:
