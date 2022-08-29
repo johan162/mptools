@@ -14,7 +14,7 @@
 # (default) all     Create proper Cloud Config Files from the *.in  templates by
 #                   expanding all environment variables.
 #
-# nodes	            Create and start all predefined nodes named in $(NODES)
+# node	            Create and start all predefined nodes named in $(NODES)
 #                   i.e. ub22n01 ub20n01 ub18n01
 #
 # clean	            Delete created YAML-files
@@ -92,7 +92,6 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F)
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
 	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
-
 
 clean:
 	rm -fr $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
