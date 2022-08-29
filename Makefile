@@ -61,7 +61,7 @@ IMAGE_UB18 := bionic
 
 # Record keeping for the release
 DIST_DIR := mptools
-DIST_VERSION := 1.2.0
+DIST_VERSION := 1.2.1
 
 # Rule and target sections
 
@@ -86,7 +86,7 @@ node: $(NODES)
 # We do a basic egrep that will fail the receipie if the node name doesn't follow
 # the correct naming convention.
 
-$(filter ub%,$(NODES)): $(CLOUD_CONFIG_F)
+$(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	@$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlxh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
