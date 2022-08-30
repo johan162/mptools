@@ -217,46 +217,54 @@ One of :
 * **&lt;NODE_NUMBER>**   
 This can be arbitrarily chosen to avoid name conflicts since  all node names must be unique. 
 
-Examples of valid names is then
+Some examples of valid names are:
+
 - ub20bl01 - A Ubuntu 20 image, basic cloud config, large machine size
 - ub18fm01 - A Ubunto 18 image, full development setup, medium machine size
 
 In the following section we will show ho to practically use this naming convention with
 the supplied makefile.
 
+>***Note:***   
+> *All nodes will have 2 CPUs. If more CPUSs are needed then the nodes must be
+created with the `mkmpnode.sh` directly using the `-p` option.*
+
 ## Examples of creating nodes using name convention
 
-The make file is used as the driver to create these nodes. By default,
+The makefile is used as the driver to create these nodes. By default,
 the makefile have three nodes predefined which are created as so
 
 ```shell
 $>  make node
 ```
 
-the following three nodes are then prepared
+the following three default nodes are then prepared:
 
  - ub18fs01 (Based on "bionic", a.k.a Ubuntu 18 LTS )
- - ub2fs01 (Based on "focal", a.k.a Ubuntu 20 LTS )
+ - ub20fs01 (Based on "focal", a.k.a Ubuntu 20 LTS )
  - ub22fs01 (Based on "jammy", a.k.a Ubuntu 22 LTS )
 
 As their names suggest these nodes are created with a full development environment based on the
-cloud init template `cloud/fulldev-config.in` 
-which installs a complete C/C++ development environment
-with some of the most commonly used libraries. All the created machines are small.
+cloud init template `cloud/fulldev-config.in` which installs a complete C/C++ development 
+environment with some of the most commonly used libraries. All created machines are small.
 
-In order to create a custom set of nodes then the node names can be supplied
-as argument (recommended) or one can of course update the default target 
-in the makefile.
+In order to create a custom set of nodes the node names can either:
+
+1. be supplied  as overridden makefile variables  (recommended) or
+2. be setup by changing the $(NODES) makefile variable in the makefile 
+
+An example will clarify this.
 
 Assume that we instead wanted to create two large Ubuntu 22 nodes with full
-development configuration and one
-X-Large Ubuntu 18 node with just the minimal dev environment. We can then
-override the `$(NODES)` makefile variable on the command line as so
+development configuration and one X-Large Ubuntu 18 node with just the 
+minimal dev environment. We can then  override the `$(NODES)` makefile 
+variable on the command line as so
 
 ```shell
-make NODES="ub22fl11 ub22fl12 ub18mx13" node
+$> make NODES="ub22fl11 ub22fl12 ub18mx13" node
 ```
-The makefile will in the background make th following three calls to the 
+
+The makefile will "under the hood" then make the following three calls to the 
 actual node creating script
 
 ```shell
@@ -266,15 +274,22 @@ actual node creating script
 ```
 
 Which will create two more large "jammy" (Ubuntu 22 LTS) nodes and 
-one x-large "bionic" (Ubuntu 18 LTS) node. 
+one x-large "bionic" (Ubuntu 18 LTS) node exactly as the node names 
+specified.
 
 It should now be obvious how to create custom nodes using the node-naming method
 together with the makefile.
 
-## Additional makefile targets
+## All makefile targets
 
+
+- **all** - The default target that will instantiate all `*.yaml` files from the 
+corresponding `*.in` templates.
+- **node** - Create the nodes specified by the `$(NODES)` makefile variable 
+(which can as usual be overridden on the command line)
 - **clean** - Delete all generated files
-- **distclean** - In addition to **clean** also remove any created distribution tar-ball
+- **distclean** - In addition to **clean** also remove any created distribution tar-ball. 
+Restores the `mptools` directory as distributed.
 - **dist** - Create a distribution tar ball
 
 # Aliases
@@ -298,7 +313,7 @@ alias mpsu="multipass suspend"
 alias mpsua="multipass suspend --all"
 ```
 
-These can of course also be added manually. 
+These aliases can of course also be added manually. 
 
 As an example, this will make it easy to connect to a node as so:
 
@@ -322,7 +337,7 @@ Mounts:         --
 ```
 
 # Tips and Tricks
-| [back to content table](#content)|
+| [back to content table](#content) |
 
 
 * The logfile when creating and starting nodes are stored at  
@@ -334,7 +349,12 @@ Mounts:         --
   file `/var/db/dhcpd_leases`  
   &nbsp;
 * Never ever use a `systemctl daemon-reload` in a cloud-init file. This will kill the SSH daemon
-  and the multipass connection to the starting node will be lost.
+  and the multipass connection to the starting node will be lost.  
+  &nbsp;
+* The cloud instantiation is recorded under `/var/lib/cloud` in the node. If a customized
+node is not working this is a good place to start troubleshooting. For example, in
+`/var/lib/cloud/instance/scripts/runcmd` is the run commands specified in the `RunCmd` extracted
+as shell commands.
 
 
 
