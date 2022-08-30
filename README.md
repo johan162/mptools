@@ -23,21 +23,31 @@ that the current user have a set of SSH keys.***
    **Note:** If `multipass` is already installed a warning will be printed.   
    **Note:** The installation script will also add SSH_PUBLIC_KEY environment variable
    needed for proper cloud init file configuration.   
+   &nbsp;
 
 
-2. Create and start the default three default nodes `ub18fs01`, `ub20fs01`, and `ub22fs01` by
+2. To create customized nodes use the wrapper script `mmn.sh` ("**M**ultipass-**N**ode") 
+with specified node names according to the node-naming specifications. 
+See section [Naming convention for automatic node creation](#naming-convention-for-automatic-node-creation)
+for explanation on how to interpret the node names.  
+    ```shell
+    % ./mpn.sh ub20fl01 ub20ml01
+    ```  
+   Aternatively using the supplied `Makefile` directly to create and start the default 
+   three default nodes `ub18fs01`, `ub20fs01`, and `ub22fs01` by
    running the provided makefile as so
-    
+
     ```shell
     make node
-    ```
-   See section [Naming convention for automatic node creation](#naming-convention-for-automatic-node-creation)
-for explanation on how to interpret the node names.
+    ```  
+   &nbsp;
+
 
 # Content
 - [Installing multipass](#installing-multipass)
 - [Creating customized nodes](#creating-customized-nodes)
 - [Creating nodes using naming convention](#creating-nodes-using-naming-convention)
+- [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
 - [Aliases](#aliases)
 - [Tips and Tricks](#tips-and-tricks)
 
@@ -292,6 +302,30 @@ corresponding `*.in` templates.
 Restores the `mptools` directory as distributed.
 - **dist** - Create a distribution tar ball
 
+# Using wrapper script to create nodes
+
+In the section above we showed how to create nodes "manually" calling the makefile
+directly. To further simplify this a small wrapper script `mpn.sh`
+("**M**ultipass-**N**ode") exists. 
+
+```text
+NAME
+   mpn.sh
+USAGE
+   mpn.sh [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
+SYNOPSIS
+      -h        : Print help and exit
+      -s        : Silent
+      -v        : Print version and exit
+```
+
+To create nodes one simply specifies one or more nodes using the previous discussed naming
+format as arguments as so:
+
+```shell
+% ./mpn.sh ub18fs01 ub20ml01 ub22fl01
+```
+
 # Aliases
 | [back to content table ](#content)|
 
@@ -318,13 +352,13 @@ These aliases can of course also be added manually.
 As an example, this will make it easy to connect to a node as so:
 
 ```shell
-$> mps ub18fs01
+% mps ub18fs01
 ```
 
 or get information on the node
 
 ```shell
-$> mpi ub22ml01
+% mpi ub22ml01
 Name:           ub22ml01
 State:          Running
 IPv4:           192.168.64.15
