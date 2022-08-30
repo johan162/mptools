@@ -28,25 +28,37 @@ that the current user have a set of SSH keys.***
 
 2. To create customized nodes use the wrapper script `mmn.sh` ("**M**ultipass-**N**ode") 
 with specified node names according to the node-naming specifications. 
-See section [Naming convention for automatic node creation](#naming-convention-for-automatic-node-creation)
-for explanation on how to interpret the node names.  
+See section [Naming convention nodes](#naming-convention-nodes)
+for explanation on how to interpret the node names.   
+&nbsp;  
+    An examples to illustrate the simplicity
+    
     ```shell
-    % ./mpn.sh ub20fl01 ub20ml01
+    % ./mpn.sh ub20fl01 ub20ms01
     ```  
-   Aternatively using the supplied `Makefile` directly to create and start the default 
-   three default nodes `ub18fs01`, `ub20fs01`, and `ub22fs01` by
-   running the provided makefile as so
-
-    ```shell
-    make node
-    ```  
+   This will after a minute or two create two nodes named `ub20fl01` and `ub20ms01`.  
+   &nbsp;  
+   - The name `ub20fl01` itself specifies how the node should be created.  
+   This will create an Ubuntu 20 LTS 'large' node (the middle `l` )  
+   configured as a full development nodes (the middle `f`). The ending `01` is just a sequence number
+   to make the node names unique.  
+   &nbsp;  
+   - The second node `ub20ml01` will be created as an Ubuntu 20 LTS 'small' node (the middle `s` )
+   configured as a minimum development node (the middle `m`).
    &nbsp;
+
+The rest of this README will discuss all scrips and option more in detail.
 
 
 # Content
 - [Installing multipass](#installing-multipass)
 - [Creating customized nodes](#creating-customized-nodes)
+  - [Cloud init files](#cloud-init-files) 
+  - [Examples of creating custom nodes](#examples-of-creating-custom-nodes)
 - [Creating nodes using naming convention](#creating-nodes-using-naming-convention)
+  - [Naming convention nodes](#naming-convention-nodes)
+  - [Examples of using the Makefile directly](#examples-of-using-the-makefile-directly)
+  - [All makefile targets](#all-makefile-targets)
 - [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
 - [Aliases](#aliases)
 - [Tips and Tricks](#tips-and-tricks)
@@ -197,7 +209,7 @@ This is based on a simple node naming schema where the node name itself
 specify what base image and what cloud init configuration and 
 machine size should be used as explained below.
 
-## Naming convention for automatic node creation 
+## Naming convention nodes 
 
 **ub**&lt;MAJOR_RELEASE>&lt;CONFIG>&lt;SIZE>&lt;NODE_NUMBER>
 
@@ -239,13 +251,17 @@ the supplied makefile.
 > *All nodes will have 2 CPUs. If more CPUSs are needed then the nodes must be
 created with the `mkmpnode.sh` directly using the `-p` option.*
 
-## Examples of creating nodes using name convention
+## Examples of using the Makefile directly
 
-The makefile is used as the driver to create these nodes. By default,
+>**Note:** The easier way is to use the  wrapper script `mpn.sh` as
+> described in section [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
+> that uses this `Makefile` "under the hood".
+
+The makefile is used as the driver to create these named nodes. By default,
 the makefile have three nodes predefined which are created as so
 
 ```shell
-$>  make node
+% make node
 ```
 
 the following three default nodes are then prepared:
@@ -271,7 +287,7 @@ minimal dev environment. We can then  override the `$(NODES)` makefile
 variable on the command line as so
 
 ```shell
-$> make NODES="ub22fl11 ub22fl12 ub18mx13" node
+% make NODES="ub22fl11 ub22fl12 ub18mx13" node
 ```
 
 The makefile will "under the hood" then make the following three calls to the 
