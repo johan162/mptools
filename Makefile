@@ -7,8 +7,6 @@
 # This could for example be in .zshenv (or.bash_profile) as:
 #      export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
 #
-# node Naming convention:  ub<MAJOR_RELEASE>n<NODE_NUMBER>
-#
 # Supported targets:
 #
 # (default) all     Create proper Cloud Config Files from the *.in  templates by
@@ -23,26 +21,30 @@
 #
 # dist              Create distribution tar ball
 #
-# By using the syntax as exemplified by:
+# node naming convention:  "ub<UBUNTU VERSION><CLOUD CONFIG><MACHINE SIZE><NODE NUMBER>"
 #
-#     make NODES="ub22n01 ub22n02 ub22n03" node
+# By using the naming convention nodes can for example be created as so:
 #
-# one can dynamically create nodes without changing the Makefile
+#     make NODES="ub22fl01 ub22fl02 ub22fl03" node
 #
 # Written by: Johan Persson <johan162@gmail.com>
-# All tools released under MIT License. See LICENSE file
+# All tools released under MIT License. See LICENSE file.
 # ==============================================================================================
 
+# Uncomment to run the makefile silent
 # MAKEFLAGS += --silent
 
 # Default nodes when making target "make node"
 NODES := ub22fs01 ub20fs01 ub18fs01
 
+# ================================================================================================
+# Setup section
+
 # Get all our defined cloud files
 CLOUD_FILES := $(wildcard cloud/*.in)
 TOOL_FILES := Makefile $(wildcard *.sh)
 
-# Predefine cloud configs based on the infix in the node name
+# Predefined cloud configs based on the infix in the node name
 CLOUD_CONFIG_F := cloud/fulldev-config.yaml
 CLOUD_CONFIG_B := cloud/mini-config.yaml
 CLOUD_CONFIG_M := cloud/minidev-config.yaml
@@ -50,6 +52,7 @@ CLOUD_CONFIG_M := cloud/minidev-config.yaml
 # Predefined sizes based on the infix in the node name
 MACHINE_CONFIG_S := -m 500MB -d 5GB
 MACHINE_CONFIG_M := -m 1GB -d 5GB
+MACHINE_CONFIG_E := -m 3GB -d 5GB
 MACHINE_CONFIG_L := -m 2GB -d 10GB
 MACHINE_CONFIG_X := -m 4GB -d 15GB
 MACHINE_CONFIG_H := -m 8GB -d 20GB
@@ -61,9 +64,10 @@ IMAGE_UB18 := bionic
 
 # Record keeping for the release
 DIST_DIR := mptools
-DIST_VERSION := 1.2.1
+DIST_VERSION := 1.2.2
 
-# Rule and target sections
+# ================================================================================================
+# Rule and recipe sections
 
 all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 
@@ -71,7 +75,6 @@ node: $(NODES)
 
 %.yaml : %.in
 	cat $< | envsubst > $@
-
 
 # This rule creates the given nodes according to the naming convention.
 # This requires some explanation.
@@ -87,7 +90,7 @@ node: $(NODES)
 # the correct naming convention.
 
 $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
-	@$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlxh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
+	@$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlexh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
