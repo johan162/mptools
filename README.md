@@ -29,9 +29,9 @@ that the current user have a set of SSH keys.***
 2. To create customized nodes use the wrapper script `mmn.sh` ("**M**ultipass-**N**ode") 
 with specified node names according to the node-naming specifications. 
 See section [Naming convention nodes](#naming-convention-nodes)
-for explanation on how to interpret the node names.   
+for a detailed explanation on how to define the node names.   
 &nbsp;  
-    An examples to illustrate the simplicity
+    An example will illustrate the simple convention used
     
     ```shell
     % ./mpn.sh ub20fl01 ub20ms01
