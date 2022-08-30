@@ -7,6 +7,15 @@
 
 set -u
 
+declare tmpfilename=$(mktemp /tmp/mplist.XXXXXXXXXXXXX)
+multipass list > $tmpfilename
+
+function cleanup {
+  rm -f $tmpfilename
+}
+
+trap cleanup EXIT
+
 # Print error messages in red
 red="\033[31m"
 default="\033[39m"
@@ -79,21 +88,21 @@ while [[ $OPTIND -le "$#" ]]; do
             errlog "Node name not in recognised format ub<18|20|22><b|m|f|><s|m|l|x|h><NODENUMBER>: \"$i\""
             exit 1
         fi
+
+        # Check if this node already exist
+        if cat $tmpfilename | grep $nodeName >/dev/null; then
+          errlog "Node $nodeName already exists."
+          exit 1
+        fi
         nodes+="$nodeName "
         ((OPTIND++))
     fi
 done
 
 if [[ $quiet_flag -eq 1 ]]; then
-  make -s NODES=\"$nodes\" node
+  make -s NODES="$nodes" node
 else
-  make NODES=\"$nodes\" node
+  make NODES="${nodes}" node
 fi
-
-
-
-
-
-
 
 
