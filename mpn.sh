@@ -91,13 +91,17 @@ while [[ $OPTIND -le "$#" ]]; do
 
         # Check if this node already exist
         if cat $tmpfilename | grep $nodeName >/dev/null; then
-          errlog "Node $nodeName already exists."
-          exit 1
+          errlog "Node $nodeName already exists, skipping."
+        else
+          nodes+="$nodeName "
         fi
-        nodes+="$nodeName "
         ((OPTIND++))
     fi
 done
+if [[ -z $nodes ]]; then
+  infolog "No nodes to create.\n"
+  exit 1
+fi
 
 if [[ $quiet_flag -eq 1 ]]; then
   make -s NODES="$nodes" node
