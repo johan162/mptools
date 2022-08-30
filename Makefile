@@ -97,11 +97,10 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
 
 clean:
-	rm -fr $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
+	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
 
 distclean: clean
-	rm -rf $(DIST_DIR)-$(DIST_VERSION).tar.gz
-	rm -rf $(DIST_DIR)
+	rm -rf $(DIST_DIR)*.tar.gz
 
 $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 	rm -rf $(DIST_DIR)
@@ -114,6 +113,6 @@ $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 	@echo "Created tar-ball:  $(DIST_DIR)-$(DIST_VERSION).tar.gz "
 	@echo "======================================================"
 
-dist: $(DIST_DIR)-$(DIST_VERSION).tar.gz
+dist: distclean $(DIST_DIR)-$(DIST_VERSION).tar.gz
 
 .PHONY: all clean nodes dist distclean $(NODES)
