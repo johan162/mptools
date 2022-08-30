@@ -23,6 +23,7 @@ infolog() {
     [[ ${quiet_flag} -eq 0 ]] && printf "$@"
 }
 
+# Get version from the one true source - the makefile
 printversion() {
   declare vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }')
   declare name=$(basename $0)
