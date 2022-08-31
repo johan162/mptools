@@ -1,0 +1,89 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+  - name: sonar
+    gecos: SonarQube User
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+  - name: ${USER}
+    gecos: host user
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+package_update: true
+package_upgrade: true
+packages:
+  - default-jre
+  - zip
+  - postgresql
+
+write_files:
+  - content: |
+      [Time]
+      PollIntervalMinSec=10
+      PollIntervalMaxSec=30
+    path: /etc/systemd/timesyncd.conf
+  - content: |
+      [Unit]
+      Description=SonarQube service
+      After=syslog.target network.target
+      [Service]
+      Type=forking
+      ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+      ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+      User=sonar
+      Restart=always
+      LimitNOFILE=131072
+      LimitNPROC=8192
+      [Install]
+      WantedBy=multi-user.target
+    path: /etc/systemd/system/sonarqube.service
+  - content: |
+      ALTER USER sonar WITH ENCRYPTED password 'sonar';
+      CREATE DATABASE sonarqube WITH ENCODING 'UTF8' OWNER sonar TEMPLATE=template0;
+      GRANT ALL PRIVILEGES ON DATABASE sonarqube to sonar;
+    path: /home/sonar/dbsetup.sql
+  - content: |
+      sonar.jdbc.username=sonar
+      sonar.jdbc.password=password
+      sonar.jdbc.url=jdbc:postgresql://localhost/sonarqube
+      sonar.search.javaOpts=-Xmx512m -Xms512m -XX:+HeapDumpOnOutOfMemoryError
+      sonar.web.host=0.0.0.0
+      sonar.web.port=9000
+    path: /home/sonar/add-to-properties.properties
+
+
+runcmd:
+  - [ timedatectl, set-ntp, true ]
+  - [ systemctl, restart, systemd-timesyncd ]
+  - [ mkdir,  /var/jenkins_home ]
+  - [ chown, bld:bld, /var/jenkins_home ]
+  - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  - apt-get install -yq nodejs
+  - npm install -gy npm
+  - npm install -gy vtop
+  - sysctl -w vm.max_map_count=524288
+  - ulimit -n 131072
+  - cd /home/sonar && curl -O https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.9.56886.zip && unzip sonarqube-8.9.9.56886.zip -d /opt
+  - mv /opt/sonarqube-8.9.9.56886 /opt/sonarqube
+  - chown -R sonar:sonar /opt/sonarqube
+  - systemctl enable sonarqube.service
+  - sudo -u postgres createdb sonarqube
+  - sudo -u postgres createuser sonar
+  - sudo -u postgres psql -U postgres -f /home/sonar/dbsetup.sql
+  
+  
+
