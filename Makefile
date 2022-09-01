@@ -34,6 +34,9 @@
 # Uncomment to run the makefile silent
 # MAKEFLAGS += --silent
 
+# Build up to four nodes in parallel
+MAKEFLAGS += -j4
+
 # Default nodes when making target "make node"
 NODES := ub22fs01 ub20fs01 ub18fs01
 
@@ -94,7 +97,7 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
-	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@
+	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@ > /dev/null
 
 clean:
 	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
