@@ -1,6 +1,6 @@
 # mptools
 
-A set of utility scripts for MacOS to both install `multipass` (with adaptations) and create `multipass` 
+A set of utility scripts for macOS to both install `multipass` (with adaptations) and create `multipass` 
 nodes initialized with the help of cloud config files. The scripts allow for several
 levels of usage depending on needs.
 
@@ -23,7 +23,7 @@ with a minimal C/C++ development environment we would do as so:
 % ./mpn.sh ub18ms01 ub18ms02
 ```
 
-Can you spot the pattern? If not, the naming convention is thoroughly documented below.
+The naming convention used is thoroughly documented below in section [Node naming convention](#node-naming-convention).
 
 
 # <TL;DR>
@@ -39,7 +39,7 @@ that the current user have a set of SSH keys.***
 1. If `multipass` is not already installed then Install `multipass` by running
 
     ```shell
-   ./mpinstall.sh
+   % ./mpinstall.sh
    ```    
    **Note:** If `multipass` is already installed a warning will be printed.   
    **Note:** The installation script will also add `SSH_PUBLIC_KEY` environment variable
@@ -47,9 +47,9 @@ that the current user have a set of SSH keys.***
    &nbsp;
 
 
-2. To create customized nodes use the wrapper script `mmn.sh` ("**M**ultipass-**N**ode") 
+2. To create customized nodes use the wrapper script `mpn.sh` ("**M**ultipass-**N**ode") 
 with specified node names according to the node-naming specifications. 
-See section [Naming convention nodes](#naming-convention-nodes)
+See section [Node naming convention](#node-naming-convention)
 for a detailed explanation on how to define the node names.   
 &nbsp;  
     An example will illustrate the simple convention used:
@@ -57,7 +57,7 @@ for a detailed explanation on how to define the node names.
     ```shell
     % ./mpn.sh ub20fl01 u18ms01
     ```  
-   This will after roughly two minutes create two nodes named `ub20fl01` and `ub20ms01`.  
+   This will after roughly 2-3 minutes create two nodes named `ub20fl01` and `ub20ms01`.  
    &nbsp;  
    - The name `ub20fl01` itself specifies how the node should be created.  
    This will create an Ubuntu 20 LTS 'large' node (the middle `l` )  
@@ -76,8 +76,8 @@ The rest of this README will discuss all scrips and option more in detail.
 - [Creating customized nodes](#creating-customized-nodes)
   - [Cloud init files](#cloud-init-files) 
   - [Examples of creating custom nodes](#examples-of-creating-custom-nodes)
-- [Creating nodes using naming convention](#creating-nodes-using-naming-convention)
-  - [Naming convention nodes](#naming-convention-nodes)
+- [Creating nodes using make](#creating-nodes-using-make)
+  - [Node naming convention](#node-naming-convention)
   - [Examples of using the Makefile directly](#examples-of-using-the-makefile-directly)
   - [All makefile targets](#all-makefile-targets)
 - [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
@@ -93,10 +93,10 @@ The first step is to install `multipass`. This can be done by using the first
 included script:
 
 ```shell
-./mpinstall.sh
+% ./mpinstall.sh
 ```
 
-This will install `multipass` on a MacOS (both M1 and Intel). On Intel architecture it will also
+This will install `multipass` on a macOS (both M1 and Intel). On Intel architecture it will also
 replace the default *hyperkit* virtualization with *qemu* since this driver will more allow
 the modification of existing machine to, say, adjust the memory size. 
 
@@ -104,7 +104,7 @@ In addition, the script will add
 a number of aliases to the `~/.zshenv` file to make it easier to manage and start
 nodes. See the section *Aliases* for a detailed description. As a final step it will also
 add an environment variable to hold the current users public SSH key to make it possible
-to use SSH to log-in to the created nodes as the environment variable `SSH_PUBLIC_KEY`.
+to use SSH to log in to the created nodes as the environment variable `SSH_PUBLIC_KEY`.
 
 The script will automatically detect if `multipass` have already been installed, and 
 hence can be considered idempotent.
@@ -161,6 +161,7 @@ As of this writing the following templates are provided
 2. `cloud/minidev-config.in`, A minimal c/C++ dev environment
 3. `cloud/mini-config.in`, A minimal node with only user and SSH keys
 4. `cloud/jenkins-config.in`, A basic Jenkins node
+5. `cloud/pg-config.in`, A basic Postgresql node
 
 In order to instantiate these templates to usable yaml-files it is assumed that 
 the environment variable `${SSH_PUBLIC_KEY}` exists and 
@@ -179,7 +180,7 @@ To use this first move into the `mptools` directory.
 Then, instantiate the cloud-init files as so:
 
 ```shell
-$>  make
+%  make
 ```
 
 This will create all the `*.yaml` files from the corresponding `*.in` files . The
@@ -196,6 +197,8 @@ created nodes by simple ssh:ing into the nodes.
 
 
 ## Examples of creating custom nodes 
+| [back to content table ](#content)|
+
 We will start by illustrating how new nodes can be easily created with the help
 of the supplied `mkmpnode.sh` script and later on we will show how the same
 process can be simplified and automated with the supplied makefile by using a strict 
@@ -207,7 +210,7 @@ instantiated with a call to `make`.
 First we are going to create a node with a  custom name and more memory than default 
 
 ```shell
-./mkmpnode.sh -m 1GB mynode
+% ./mkmpnode.sh -m 1GB mynode
 ```
 
 This will create (and start) a new node with 1GB memory named "mynode" and initialized 
@@ -219,13 +222,13 @@ but if we instead wanted to create an even larger node, based on Ubuntu18 with a
 configuration we would instead need to call
 
 ```shell
-./mkmpnode.sh -r bionic -m 4GB -c cloud/fulldev-config.yaml -d 10GB mynode
+% ./mkmpnode.sh -r bionic -m 4GB -c cloud/fulldev-config.yaml -d 10GB mynode
 ```
 
 This will create a node with 4GB RAM and a 10GB disk based on Ubuntu 18 (i.e. "bionic")
 
 
-# Creating nodes using naming convention
+# Creating nodes using make
 | [back to content table ](#content)|
 
 The previous section showed how nodes could be manually created by giving a few
@@ -233,44 +236,47 @@ parameters to the `mkmpnode.sh` script. However, there is an easier way. By usin
 supplied makefile it is possible to create nodes without giving all the parameters
 but instead just give the node a very specific name.
 
+> There is also a wrapper script `mpn.sh` described in the next section that slightly 
+> simplifies the calling to `make`
+
 This is based on a simple node naming schema where the node name itself
 specify what base image and what cloud init configuration and 
 machine size should be used as explained below.
 
-## Naming convention nodes 
+## Node naming convention 
+| [back to content table ](#content)|
 
-**ub**&lt;MAJOR_RELEASE>&lt;CONFIG>&lt;SIZE>&lt;NODE_NUMBER>
+```text
+ub&lt;MAJOR_RELEASE>&lt;CONFIG>&lt;SIZE>&lt;NODE_NUMBER>
+```
 
-* **&lt;MAJOR_RELEASE>**   
-One of :
-    * 18 (="bionic") 
-    * 20 (="focal")
-    * 22 (="jammy")  
-&nbsp;
-* **&lt;CONFIG>**  
-One of :
-    * **b** (=Basic node, no dev tools)  
-      Based on: `cloud/mini-config.yaml` 
-    * **f** (=Full dev node)  
-      Based on: `cloud/fulldev-config.yaml`
-    * **m** (=Minimal dev node)  
-      Based on: `cloud/minidev-config.yaml`  
-&nbsp;
-* **&lt;SIZE>**  
-One of :
-    * **s** (Small=500MB RAM/5GB Disk)
-    * **m** (Medium=1GB RAM/5GB Disk)
-    * **l** (Large=2GB RAM/10GB Disk)
-    * **x** (X-Large=4GB RAM/15GB Disk)
-    * **h** (Humungous=8GB RAM/20GB Disk)  
-&nbsp;
-* **&lt;NODE_NUMBER>**   
-This can be arbitrarily chosen to avoid name conflicts since  all node names must be unique. 
+<table>
+    <caption>Designators in node naming</caption>
+    <thead>
+        <tr>
+            <th>&lt;MAJOR_RELEASE></th>
+            <th>&lt;CONFIG></th>
+            <th>&lt;SIZE></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td valign="top"><ul><li>18 (="bionic")</li><li>20 (="focal")</li><li>22 (="jammy")</li></ul></td>
+            <td valign="top"><ul><li>b &nbsp;(=Basic node, no dev tools),<br/>`cloud/mini-config.yaml`<br/>&nbsp;</li><li>f  &nbsp;(=Full dev node), <br/>`cloud/fulldev-config.yaml`<br/>&nbsp;</li><li>m  &nbsp;(=Minimal dev node),<br/>`cloud/minidev-config.yaml`<br/>&nbsp;</li></ul></td>
+            <td valign="top"><ul><li>s &nbsp;(Small=500MB RAM/5GB Disk)</li><li> m &nbsp; (Medium=1GB RAM/5GB Disk)</li><li>l &nbsp; (Large=2GB RAM/10GB Disk)</li><li>x &nbsp; (X-Large=4GB RAM/15GB Disk)</li><li>h &nbsp; (Humungous=8GB RAM/20GB Disk)</li></ul></td>
+        </tr>
+    </tbody>
+</table>
+
+
+**&lt;NODE_NUMBER>**   
+Arbitrarily chosen to avoid name conflicts since  all node names must be unique. 
 
 Some examples of valid names are:
 
 - ub20bl01 - A Ubuntu 20 image, basic cloud config, large machine size
-- ub18fm01 - A Ubunto 18 image, full development setup, medium machine size
+- ub18fm01 - A Ubuntu 18 image, full development setup, medium machine size
+- ub22mx12 - A Ubuntu 22 image, minimal development setup, x-large machine size
 
 In the following section we will show ho to practically use this naming convention with
 the supplied makefile.
@@ -280,6 +286,7 @@ the supplied makefile.
 created with the `mkmpnode.sh` directly using the `-p` option.*
 
 ## Examples of using the Makefile directly
+| [back to content table ](#content)|
 
 >**Note:** The easier way is to use the  wrapper script `mpn.sh` as
 > described in section [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
@@ -297,6 +304,14 @@ the following three default nodes are then prepared:
  - ub18fs01 (Based on "bionic", a.k.a Ubuntu 18 LTS )
  - ub20fs01 (Based on "focal", a.k.a Ubuntu 20 LTS )
  - ub22fs01 (Based on "jammy", a.k.a Ubuntu 22 LTS )
+
+In order to build all nodes in parallel use the usual `-j` option to make. 
+So for example to build up to four nodes in parallel call
+
+```shell
+% make -j4 node
+```
+
 
 As their names suggest these nodes are created with a full development environment based on the
 cloud init template `cloud/fulldev-config.in` which installs a complete C/C++ development 
@@ -331,11 +346,13 @@ Which will create two more large "jammy" (Ubuntu 22 LTS) nodes and
 one x-large "bionic" (Ubuntu 18 LTS) node exactly as the node names 
 specified.
 
+Again, use `-j` to build nodes in parallel.
+
 It should now be obvious how to create custom nodes using the node-naming method
 together with the makefile.
 
 ## All makefile targets
-
+| [back to content table ](#content)|
 
 - **all** - The default target that will instantiate all `*.yaml` files from the 
 corresponding `*.in` templates.
@@ -343,10 +360,12 @@ corresponding `*.in` templates.
 (which can as usual be overridden on the command line)
 - **clean** - Delete all generated files
 - **distclean** - In addition to **clean** also remove any created distribution tar-ball. 
-Restores the `mptools` directory as distributed.
+Restores the `mptools` directory as distributed and should be called before a release
+is built.
 - **dist** - Create a distribution tar ball
 
 # Using wrapper script to create nodes
+| [back to content table ](#content)|
 
 In the section above we showed how to create nodes "manually" calling the makefile
 directly. To further simplify this a small wrapper script `mpn.sh`
@@ -369,6 +388,9 @@ format as arguments as so:
 ```shell
 % ./mpn.sh ub18fs01 ub20ml01 ub22fl01
 ```
+
+The wrapper script makes use of make's parallel options and will cut down the time to create multiple
+nodes by starting up to four parallel node creations.
 
 # Aliases
 | [back to content table ](#content)|
