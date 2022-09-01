@@ -1,9 +1,29 @@
 # mptools
 
-A set of utility script for MacOS to both install `multipass` and create `multipass` 
-nodes initialized from a cloud config file. The nodes can be created with the 
-included Makefile based on a simple naming convention that controls both how they
-are instantiated and the size of the virtual machine. 
+A set of utility scripts for MacOS to both install `multipass` (with adaptations) and create `multipass` 
+nodes initialized with the help of cloud config files. The scripts allow for several
+levels of usage depending on needs.
+
+In its simplest form (after installing) nodes can be created using a naming convention
+that specifies how to initialize the node as well as (some of) the specification for
+the virtual machine such as RAM and disk.
+
+So, for example to create two medium-sized nodes with a full C/C++ development environment
+with common libraries and a GNU C/C++ toolchain based on Ubuntu 22 LTS one would do as so:
+
+```shell
+% ./mpn.sh ub22fm01 ub22fm02
+```
+
+If we instead had wanted small nodes based on Ubuntu 18 LTS
+with a minimal C/C++ development environment we would do as so:
+
+
+```shell
+% ./mpn.sh ub18ms01 ub18ms02
+```
+
+Can you spot the pattern? If not, the naming convention is thoroughly documented below.
 
 
 # <TL;DR>
@@ -17,12 +37,13 @@ that the current user have a set of SSH keys.***
 &nbsp;
 
 1. If `multipass` is not already installed then Install `multipass` by running
+
     ```shell
    ./mpinstall.sh
    ```    
    **Note:** If `multipass` is already installed a warning will be printed.   
-   **Note:** The installation script will also add SSH_PUBLIC_KEY environment variable
-   needed for proper cloud init file configuration.   
+   **Note:** The installation script will also add `SSH_PUBLIC_KEY` environment variable
+   since that is needed for proper cloud init file configuration.   
    &nbsp;
 
 
@@ -31,19 +52,19 @@ with specified node names according to the node-naming specifications.
 See section [Naming convention nodes](#naming-convention-nodes)
 for a detailed explanation on how to define the node names.   
 &nbsp;  
-    An example will illustrate the simple convention used
+    An example will illustrate the simple convention used:
     
     ```shell
-    % ./mpn.sh ub20fl01 ub20ms01
+    % ./mpn.sh ub20fl01 u18ms01
     ```  
-   This will after a minute or two create two nodes named `ub20fl01` and `ub20ms01`.  
+   This will after roughly two minutes create two nodes named `ub20fl01` and `ub20ms01`.  
    &nbsp;  
    - The name `ub20fl01` itself specifies how the node should be created.  
    This will create an Ubuntu 20 LTS 'large' node (the middle `l` )  
    configured as a full development nodes (the middle `f`). The ending `01` is just a sequence number
    to make the node names unique.  
    &nbsp;  
-   - The second node `ub20ml01` will be created as an Ubuntu 20 LTS 'small' node (the middle `s` )
+   - The second node `ub18ml01` will be created as an Ubuntu 18 LTS 'small' node (the middle `s` )
    configured as a minimum development node (the middle `m`).
    &nbsp;
 
@@ -76,9 +97,14 @@ included script:
 ```
 
 This will install `multipass` on a MacOS (both M1 and Intel). On Intel architecture it will also
-replace the default *hyperkit* virtualization with *qemu*. In addition, it will add 
+replace the default *hyperkit* virtualization with *qemu* since this driver will more allow
+the modification of existing machine to, say, adjust the memory size. 
+
+In addition, the script will add 
 a number of aliases to the `~/.zshenv` file to make it easier to manage and start
-nodes. See the section *Aliases* for a detailed description.
+nodes. See the section *Aliases* for a detailed description. As a final step it will also
+add an environment variable to hold the current users public SSH key to make it possible
+to use SSH to log-in to the created nodes as the environment variable `SSH_PUBLIC_KEY`.
 
 The script will automatically detect if `multipass` have already been installed, and 
 hence can be considered idempotent.
@@ -87,7 +113,8 @@ hence can be considered idempotent.
 # Creating customized nodes
 | [back to content table](#content) |
 
-The core script of `mptool` is the script ample called `mkmpnode.sh` which can be seen as a
+One of the scripts of the `mptool` package  is the script ample called `mkmpnode.sh` which can 
+be seen as a
 wrapper around the core `multipass launch` command to make creating and launching nodes with
 the help of pre-defined cloud init files easier by using a set of predefined cloud-init 
 template files.
@@ -146,9 +173,10 @@ export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
 
 > Note: If the `mpinstall.sh` install script have been used this has been automatically added
 
-In order to expand the provided templates to their corresponding  `*.yaml` yaml files a
+In order to expand the provided templates to their corresponding  `*.yaml` yaml file a
 provided makefile exists. 
-Move into the `mptools` directory. Then instantiate the cloud-init files as so:
+To use this first move into the `mptools` directory. 
+Then, instantiate the cloud-init files as so:
 
 ```shell
 $>  make
@@ -160,7 +188,7 @@ created files will have the current users public SSH keys and user-name inserted
 The installed SSH keys will make it easier for tools and "manual" access to the 
 created nodes by simple ssh:ing into the nodes.
 
->**Note:** New cloud file templates can be easily added by for example
+>**Note:** New cloud file templates can be easily added by, for example,
 > copying an existing file to a new name and making modifications. 
 > The makefile will automatically
 > pick up any new template files in the cloud directory and include them
