@@ -227,6 +227,32 @@ configuration we would instead need to call
 
 This will create a node with 4GB RAM and a 10GB disk based on Ubuntu 18 (i.e. "bionic")
 
+### Setting up a Postgresql DB-server
+One of the cloud-init files allow for easy setup of a postgresql server.
+This server needs to be created by the `mkmpnode.sh` script since the node naming convention
+has no concept of a DB server.
+
+The cloud init file will setup a basic postgres server with some password as specified in the
+cloud init file os it is most definitely only for experiments and tests. See table below.
+
+
+| User/DB Owner | Password | DB        |
+|---------------|----------|:----------|
+| postgres      | postgres | postgres  |
+| ubuntu        | ubuntu   | ubuntu_db |
+Table: Default roles/users created
+
+To create a Postgresql server where we assume we need 2GB of RAM we would call
+
+```shell
+ % ./mkmpnode.sh -c cloud/pg-config.yaml -m 2GB db-server
+```
+
+The default postresql cloud file will setup the access permission to the server so it is accessible from the outside
+and also create a new user "ubuntu" with default password "ubuntu" and a new DB `ubuntu_db` (for experiments)
+The TCP/IP access restriction is set to `"samenet"` any access must be from the same 
+sub-network that we are currently on (e.g. from another MP node or from the host).
+
 
 # Creating nodes using make
 | [back to content table ](#content)|

@@ -1,0 +1,59 @@
+#cloud-config basic (unsecure) postgres server
+users:
+  - default
+  - name: ubuntu
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+  - name: ${USER}
+    gecos: cloud builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: users, admin
+    lock_passwd: false
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
+package_update: true
+package_upgrade: true
+packages:
+  - postgresql
+
+write_files:
+  - content: |
+      [Time]
+      PollIntervalMinSec=10
+      PollIntervalMaxSec=30
+    path: /etc/systemd/timesyncd.conf
+  - content: |
+      ALTER USER ubuntu WITH ENCRYPTED password 'ubuntu';
+      CREATE DATABASE ubuntu_db WITH ENCODING 'UTF8' OWNER ubuntu TEMPLATE=template0;
+      GRANT ALL PRIVILEGES ON DATABASE ubuntu_db to ubuntu;
+    path: /home/ubuntu/dbsetup.sql
+  - content: |
+      listen_addresses = '*'
+    path: /home/ubuntu/db_confmod.txt
+  - content: |
+      host    all             all             samenet                 md5
+      host    all             postgres        samenet                 md5
+    path: /home/ubuntu/db_hba.txt
+
+# Note: Requires restart after initial setup.
+runcmd:
+  - [ timedatectl, set-ntp, true ]
+  - [ systemctl, restart, systemd-timesyncd ]
+  - curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+  - apt-get install -yq nodejs
+  - npm install -gy npm
+  - npm install -gy vtop
+  - sudo -u postgres createuser ubuntu
+  - sudo -u postgres psql -U postgres -f /home/ubuntu/dbsetup.sql
+  - cat /home/ubuntu/db_confmod.txt >> /etc/postgresql/14/main/postgresql.conf
+  - cat /home/ubuntu/db_hba.txt >> /etc/postgresql/14/main/pg_hba.conf
+  - touch /home/ubuntu/.psql_history
+  - chmod ubuntu:ubuntu /home/ubuntu/.psql_history
+
+
+
+  
+
