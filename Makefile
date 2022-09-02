@@ -67,7 +67,7 @@ IMAGE_UB18 := bionic
 
 # Record keeping for the release
 DIST_DIR := mptools
-DIST_VERSION := 1.3.0
+DIST_VERSION := 1.3.1-dev
 
 # ================================================================================================
 # Rule and recipe sections
@@ -116,6 +116,6 @@ $(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
 	@echo "Created tar-ball:  $(DIST_DIR)-$(DIST_VERSION).tar.gz "
 	@echo "======================================================"
 
-dist: distclean $(DIST_DIR)-$(DIST_VERSION).tar.gz
+dist: $(DIST_DIR)-$(DIST_VERSION).tar.gz
 
 .PHONY: all clean nodes dist distclean $(NODES)
