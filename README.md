@@ -240,9 +240,9 @@ cloud init file os it is most definitely only for experiments and tests. See tab
 |---------------|----------|:----------|
 | postgres      | postgres | postgres  |
 | ubuntu        | ubuntu   | ubuntu_db |
-Table: Default roles/users created
+Table: Default roles/users created by pg-config.in
 
-To create a Postgresql server where we assume we need 2GB of RAM we would call
+To create a Postgresql server (assuming the cloud yaml file have previously been instantiated with a call to `% make` ) where we assume we need 2GB of RAM we would call
 
 ```shell
  % ./mkmpnode.sh -c cloud/pg-config.yaml -m 2GB db-server
