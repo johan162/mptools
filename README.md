@@ -46,7 +46,6 @@ that the current user have a set of SSH keys.***
    since that is needed for proper cloud init file configuration.   
    &nbsp;
 
-
 2. To create customized nodes use the wrapper script `mpn.sh` ("**M**ultipass-**N**ode") 
 with specified node names according to the node-naming specifications. 
 See section [Node naming convention](#node-naming-convention)
@@ -232,7 +231,7 @@ One of the cloud-init files allow for easy setup of a postgresql server.
 This server needs to be created by the `mkmpnode.sh` script since the node naming convention
 has no concept of a DB server.
 
-The cloud init file will setup a basic postgres server with some password as specified in the
+The cloud init file will set up a basic postgres server with some password as specified in the
 cloud init file os it is most definitely only for experiments and tests. See table below.
 
 
@@ -248,10 +247,11 @@ To create a Postgresql server (assuming the cloud yaml file have previously been
  % ./mkmpnode.sh -c cloud/pg-config.yaml -m 2GB db-server
 ```
 
-The default postresql cloud file will setup the access permission to the server so it is accessible from the outside
+The default postresql cloud file will set up the access permission to the server
+so it is accessible from the outside
 and also create a new user "ubuntu" with default password "ubuntu" and a new DB `ubuntu_db` (for experiments)
 The TCP/IP access restriction is set to `"samenet"` any access must be from the same 
-sub-network that we are currently on (e.g. from another MP node or from the host).
+subnetwork that we are currently on (e.g. from another MP node or from the host).
 
 
 # Creating nodes using make
