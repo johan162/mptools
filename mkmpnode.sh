@@ -5,9 +5,9 @@
 # All tools released under MIT License. See LICENSE file
 # ==========================================================================
 
-
-# Warn about unbound variable usage
-set -u
+# Detect in some common error conditions.
+set -o nounset
+set -o pipefail
 
 declare ubuntuVer=jammy
 declare nodeName=
@@ -40,10 +40,15 @@ infolog() {
 
 # Get version from the one true source - the makefile
 printversion() {
-  declare vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }')
-  declare name=$(basename $0)
-  infolog "Name: ${name}\n"
-  infolog "Version: ${vers}\n"
+    declare vers
+    if vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+        errlog "Internal error. Failed to extract version from Makefile. Please report!"
+        exit 1
+    fi
+    declare name
+    name=$(basename "$0")
+    infolog "Name: ${name}\n"
+    infolog "Version: ${vers}\n"
 }
 
 # arg1 word to find
@@ -53,8 +58,8 @@ exist_in_list() {
     local find="$1"
     shift
     local list=("$@")
-    for v in ${list[@]}; do
-        if [[ $v == $find ]]; then
+    for v in "${list[@]}"; do
+        if [[ $v == "$find" ]]; then
             found=1
             break
         fi
@@ -64,7 +69,8 @@ exist_in_list() {
 
 # Print usage
 usage() {
-    declare name=$(basename $0)
+    declare name
+    name=$(basename "$0")
     cat <<EOT
 NAME
    $name
@@ -87,45 +93,44 @@ EOT
 while [[ $OPTIND -le "$#" ]]; do
     if getopts r:n:c:m:d:p:hMv o; then
         case "$o" in
-        h)
-            usage $0
-            exit 0
-            ;;
-        r)
-            exist_in_list "$OPTARG" "${vlist[@]}"
-            if [[ $? -eq 0 ]]; then
-                errlog "Unknown Ubuntu release: ${OPTARG}"
-                errlog "Must be one of: ${vlist[@]}"
+            h)
+                usage "$0"
+                exit 0
+                ;;
+            r)
+                if exist_in_list "$OPTARG" "${vlist[@]}"; then
+                    errlog "Unknown Ubuntu release: \"${OPTARG}\", must be one of: \"${vlist[*]}\""
+                    exit 1
+                fi
+                ubuntuVer="$OPTARG"
+                ;;
+            c)
+                cloudInit="$OPTARG"
+                ;;
+            m)
+                memory="$OPTARG"
+                ;;
+            d)
+                disk="$OPTARG"
+                ;;
+            p)
+                cpus="$OPTARG"
+                if [[ $cpus -lt 1 || $cpus -gt 8 ]]; then
+                    errlog "Number of CPUs must be between 1-8"
+                    exit 1
+                fi
+                ;;
+            M)
+                mountDev=1
+                ;;
+            v)
+                printversion "$0"
+                exit 0
+                ;;
+            [?])
+                usage "$(basename "$0")"
                 exit 1
-            fi
-            ubuntuVer="$OPTARG"
-            ;;
-        c)
-            cloudInit="$OPTARG"
-            ;;
-        m)
-            memory="$OPTARG"
-            ;;
-        d)
-            disk="$OPTARG"
-            ;;
-        p)
-            cpus="$OPTARG"
-            if [[ $cpus -lt 1 || $cpus -gt 8 ]]; then
-                errlog "Number of CPUs must be between 1-8"
-                exit 1
-            fi
-            ;;
-        M) mountDev=1
-            ;;
-        v)
-            printversion $0
-            exit 0
-            ;;
-        [?])
-            usage "$(basename $0)"
-            exit 1
-            ;;
+                ;;
         esac
     elif [[ $OPTIND -le "$#" ]]; then
         nodeName="${!OPTIND}"
@@ -134,25 +139,24 @@ while [[ $OPTIND -le "$#" ]]; do
 done
 
 if [[ -z $nodeName ]]; then
-  errlog "Nodename not specified"
-  usage $1
-  exit 1
+    errlog "Nodename not specified"
+    usage "$1"
+    exit 1
 fi
-
 
 if multipass list | grep $nodeName >/dev/null; then
     VM_STATE=$(multipass info $nodeName | grep -i State)
     case "${VM_STATE}" in
-    *Stopped)
-        multipass start $nodeName
-        ;;
-    *Running)
-        echo "$nodeName is already running"
-        ;;
-    *)
-        echo "VM is $VM_STATE, wait and run again"
-        exit 1
-        ;;
+        *Stopped)
+            multipass start $nodeName
+            ;;
+        *Running)
+            echo "$nodeName is already running"
+            ;;
+        *)
+            echo "VM is $VM_STATE, wait and run again"
+            exit 1
+            ;;
     esac
 else
     declare homeDir=$HOME
@@ -162,7 +166,7 @@ else
     fi
 
     if [[ -z $cloudInit ]]; then
-        infolog "No cloud file specified. Using minidev config.\n"
+        infolog "Note: No cloud file specified. Using minidev config.\n"
         declare cinitopt="--cloud-init cloud/minidev-config.yaml"
     elif [[ -f $cloudInit ]]; then
         declare cinitopt="--cloud-init $cloudInit"
@@ -172,19 +176,17 @@ else
     fi
 
     infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
-    multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
-
-    if [[ $? -ne 0 ]]; then
-      errlog "Failed to create node!"
-      exit 1
+    if multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer; then
+        errlog "Failed to create node!"
+        exit 1
     fi
 
-    multipass restart $nodeName
-
-    if [[ $? -eq 0 ]]; then
-        multipass info $nodeName
-    else
+    if multipass restart $nodeName; then
         errlog "Failed to restart $nodeName.\n"
         exit 1
     fi
+
+    # Finally, give some information of the newly created node
+    multipass info $nodeName
+
 fi
