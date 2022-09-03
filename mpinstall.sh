@@ -41,6 +41,13 @@ printversion() {
     infolog "${name} ${vers}\n"
 }
 
+# We shouldn't run as root
+if [[ "$EUID" -eq 0 ]]; then
+    errlog "This script should not run as root"
+    exit 1
+fi
+
+# Poor mans command line option parsing
 if [[ $# -eq 1 ]]; then
     if [[ $1 == "-v" ]]; then
         printversion
@@ -54,7 +61,6 @@ elif [[ $# -ne 0 ]]; then
 fi
 
 # Check if multipass is already installed
-
 if hash multipass >/dev/null 2>&1; then
     errlog "multipass is already installed."
     exit 0
@@ -63,7 +69,6 @@ else
 fi
 
 # Check if brew is installed
-
 if ! hash brew >/dev/null 2>&1; then
     errlog "homebrew not installed. Please visit https://brew.sh/"
     exit 0
