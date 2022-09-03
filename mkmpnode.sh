@@ -41,14 +41,14 @@ infolog() {
 # Get version from the one true source - the makefile
 printversion() {
     declare vers
-    if vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+    if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+        echo $vers
         errlog "Internal error. Failed to extract version from Makefile. Please report!"
         exit 1
     fi
     declare name
     name=$(basename "$0")
-    infolog "Name: ${name}\n"
-    infolog "Version: ${vers}\n"
+    infolog "${name} ${vers}\n"
 }
 
 # arg1 word to find
