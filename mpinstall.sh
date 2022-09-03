@@ -6,8 +6,9 @@
 # All tools released under MIT License. See LICENSE file.
 # ==========================================================================
 
-# Warn about using uninitialized variables
-set -u
+# Detect in some common error conditions.
+set -o nounset
+set -o pipefail
 
 # Print error messages in red
 red="\033[31m"
@@ -29,36 +30,51 @@ infolog() {
 
 # Get version from the one true source - the makefile
 printversion() {
-  declare vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }')
-  declare name=$(basename $0)
-  infolog "Name: ${name}\n"
-  infolog "Version: ${vers}\n"
+    declare vers
+    if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+        echo $vers
+        errlog "Internal error. Failed to extract version from Makefile. Please report!"
+        exit 1
+    fi
+    declare name
+    name=$(basename "$0")
+    infolog "${name} ${vers}\n"
 }
 
+if [[ $# -eq 1 ]]; then
+    if [[ $1 == "-v" ]]; then
+        printversion
+    else
+        errlog "Unknown option: $1"
+        exit 1
+    fi
+elif [[ $# -ne 0 ]]; then
+    errlog "Can only have '-v' option"
+    exit 1
+fi
 
 # Check if multipass is already installed
-hash multipass > /dev/null 2>&1
-if [[ $? -eq 0 ]]; then
-  errlog "multipass is already installed."
-  exit 0
+
+if hash multipass >/dev/null 2>&1; then
+    errlog "multipass is already installed."
+    exit 0
 else
-  echo "multipass not found. Will start installation."
+    echo "multipass not found. Will start installation."
 fi
 
 # Check if brew is installed
-hash brew  > /dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-  errlog "homebrew not installed. Please visit https://brew.sh/"
-  exit 0
+
+if ! hash brew >/dev/null 2>&1; then
+    errlog "homebrew not installed. Please visit https://brew.sh/"
+    exit 0
 fi
 
 # Add some aliases to .zshenv for ease of use
 if [[ -f ${HOME}/.zshenv ]]; then
-  grep 'alias mp="multipass"' ${HOME}/.zshenv > /dev/null
-  if [[ $? -eq 0 ]]; then
-    infolog "Aliases will not be added to .zshenv as they have already been added."
-  else
-    cat << EOF >> ${HOME}/.zshenv
+    if grep 'alias mp="multipass"' "${HOME}"/.zshenv >/dev/null; then
+        infolog "Aliases will not be added to .zshenv as they have already been added."
+    else
+        cat <<EOF >>"${HOME}"/.zshenv
 # ===========================================
 # Automatically added by mpinstall.sh
 # multipass conveniences aliases
@@ -76,34 +92,34 @@ alias mpia="multipass info --all"
 alias mpsu="multipass suspend"
 alias mpsua="multipass suspend --all"
 EOF
-  fi
-  grep 'export SSH_PUBLIC_KEY"' ${HOME}/.zshenv > /dev/null
-  if [[ $? -eq 0 ]]; then
-      infolog "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
+    fi
+
+    if grep 'export SSH_PUBLIC_KEY"' "${HOME}"/.zshenv >/dev/null; then
+        infolog "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
     else
-      cat << EOF >> ${HOME}/.zshenv
+        cat <<EOF >>"${HOME}"/.zshenv
 # ===========================================
 # Automatically added by mpinstall.sh
 # User SSH key
 # ===========================================
-export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
+export SSH_PUBLIC_KEY=$(cat "${HOME}"/.ssh/id_rsa.pub)
 EOF
+    fi
 fi
 
 # Now do the install through homebrew
 # Find out if we are running on Intel or M1
 if [[ $(uname -m) == 'x86_64' ]]; then
-  # Switch from hyperkit to qemu in order for efficiency and be able
-  # to get/set more parameters if we are on Intel
-  brew install libvirt
-  brew install --cask multipass
-  mp set local.driver=qemu
+    # Switch from hyperkit to qemu in order for efficiency and be able
+    # to get/set more parameters if we are on Intel
+    brew install libvirt
+    brew install --cask multipass
+    mp set local.driver=qemu
 else
-  # On M1 qemu is already used so we just install it
-  brew install --cask multipass
+    # On M1 qemu is already used so we just install it
+    brew install --cask multipass
 fi
 
 infolog "=========================="
 infolog "multipass setup completed."
 infolog "=========================="
-
