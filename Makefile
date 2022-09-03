@@ -67,7 +67,7 @@ IMAGE_UB18 := bionic
 
 # Record keeping for the release
 DIST_DIR := mptools
-DIST_VERSION := 1.3.1-dev
+DIST_VERSION := 1.3.1
 
 # ================================================================================================
 # Rule and recipe sections
