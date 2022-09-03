@@ -63,15 +63,23 @@ IMAGE_UB18 := bionic
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 1.3.2
+DIST_VERSION := 1.4.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
+DISTCLOUD_DIR := $(DIST_DIR)/cloud
 MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
+INSTALL_PREFIX := /usr/local/share
+INSTALL_BINDIR := /usr/local/bin
 
 # Get all our defined cloud files
-CLOUD_FILES := $(wildcard cloud/*.in)
+CLOUD_TEMPLATE_FILES := $(wildcard cloud/*.in)
+
+# Generated cloud-init files
+CLOUDINIT_FILES := $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 
 # ... and all tool files and shell scripts
-SCRIPT_FILES := Makefile $(wildcard *.sh)
+SCRIPT_FILES := $(wildcard *.sh)
+
+SCRIPT_BINFILES := $(patsubst %.sh,%,$(SCRIPT_FILES))
 
 # Documentation
 DOC_FILES := LICENSE $(wildcard *.md)
@@ -79,7 +87,7 @@ DOC_FILES := LICENSE $(wildcard *.md)
 # ================================================================================================
 # Rule and recipe sections
 
-all: $(patsubst %.in,%.yaml,$(CLOUD_FILES))
+all: $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 
 node: $(NODES)
 
@@ -107,22 +115,42 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@ > /dev/null
 
 clean:
-	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_FILES))
+	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 
 distclean: clean
 	rm -rf $(PKG_NAME)-[1-9].[1-9]*
 
-$(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_FILES) $(DOC_FILES)
+$(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_TEMPLATE_FILES) $(DOC_FILES)
 	rm -rf $(DIST_DIR)
-	mkdir $(DIST_DIR)
-	cp $(DOC_FILES) $(SCRIPT_FILES) $(DIST_DIR)
-	mkdir $(DIST_DIR)/cloud
-	cp -r $(CLOUD_FILES) $(DIST_DIR)/cloud
+	mkdir -p $(DISTCLOUD_DIR)
+	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(DIST_DIR)
+	cp $(CLOUD_TEMPLATE_FILES) $(DISTCLOUD_DIR)
 	tar zcf $(DIST_DIR).tar.gz $(DIST_DIR)
 	@echo "======================================================"
-	@echo "Created tar-ball:  $(DIST_DIR).tar.gz"
+	@echo "Created:  $(DIST_DIR).tar.gz"
 	@echo "======================================================"
 
 dist: $(DIST_DIR).tar.gz
 
-.PHONY: all clean nodes dist distclean $(NODES)
+install: all
+	@if [ -d $(INSTALL_PREFIX)/$(DIST_DIR) ]; then echo "Package already installed under $(INSTALL_PREFIX)/$(DIST_DIR)"; exit 1; fi
+	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BINDIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BINDIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
+	mkdir -p $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
+	cp $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_PREFIX)/$(DIST_DIR)
+	cp $(CLOUDINIT_FILES) $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
+	chmod +x $(INSTALL_PREFIX)/$(DIST_DIR)/*.sh
+	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_PREFIX)/$(DIST_DIR)/$${files} $(INSTALL_BINDIR)/$${files%.sh}; done
+	@echo "======================================================"
+	@echo "Installed package in: $(INSTALL_PREFIX)/$(DIST_DIR)"
+	@echo "Linked script files as:"
+	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh}; done
+	@echo "======================================================"
+
+uninstall:
+	rm -rf $(INSTALL_PREFIX)/$(DIST_DIR)
+	for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BINDIR)/$${files%.sh}; done
+	@echo "======================================================"
+	@echo "Uninstalled $(INSTALL_PREFIX)/$(DIST_DIR)"
+	@echo "======================================================"
+
+.PHONY: all clean nodes dist distclean install uninstall $(NODES)
