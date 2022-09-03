@@ -39,14 +39,14 @@ infolog() {
 # Get version from the one true source - the makefile
 printversion() {
     declare vers
-    if vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+    if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+        echo $vers
         errlog "Internal error. Failed to extract version from Makefile. Please report!"
         exit 1
     fi
     declare name
     name=$(basename "$0")
-    infolog "Name: ${name}\n"
-    infolog "Version: ${vers}\n"
+    infolog "${name} ${vers}\n"
 }
 
 # arg1 word to find
@@ -64,7 +64,6 @@ exist_in_list() {
     done
     return $found
 }
-
 
 usage() {
     declare name=$(basename $0)
@@ -117,7 +116,7 @@ while [[ $OPTIND -le "$#" ]]; do
         fi
 
         # Check if this node already exist
-        if grep $nodeName < "$tmpfilename" >/dev/null; then
+        if grep $nodeName <"$tmpfilename" >/dev/null; then
             errlog "Node $nodeName already exists, skipping."
         else
             if ! exist_in_list ${nodeName} "${nodeList[@]}"; then
@@ -131,12 +130,12 @@ while [[ $OPTIND -le "$#" ]]; do
     fi
 done
 if [[ -z $nodes ]]; then
-    infolog "No nodes to create.\n"
+    errlog "No node names specified."
     exit 1
 fi
 
 if [[ $quiet_flag -eq 1 ]]; then
-   echo make -s NODES="${nodes}" node
+    echo make -s NODES="${nodes}" node
 else
-   echo make NODES="${nodes}" node
+    echo make NODES="${nodes}" node
 fi
