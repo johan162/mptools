@@ -43,10 +43,6 @@ NODES := ub22fs01 ub20fs01 ub18fs01
 # ================================================================================================
 # Setup section
 
-# Get all our defined cloud files
-CLOUD_FILES := $(wildcard cloud/*.in)
-TOOL_FILES := Makefile $(wildcard *.sh)
-
 # Predefined cloud configs based on the infix in the node name
 CLOUD_CONFIG_F := cloud/fulldev-config.yaml
 CLOUD_CONFIG_B := cloud/mini-config.yaml
@@ -66,8 +62,19 @@ IMAGE_UB20 := focal
 IMAGE_UB18 := bionic
 
 # Record keeping for the release
-DIST_DIR := mptools
-DIST_VERSION := 1.3.1
+PKG_NAME := mptools
+DIST_VERSION := 1.3.2
+DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
+MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
+
+# Get all our defined cloud files
+CLOUD_FILES := $(wildcard cloud/*.in)
+
+# ... and all tool files and shell scripts
+SCRIPT_FILES := Makefile $(wildcard *.sh)
+
+# Documentation
+DOC_FILES := LICENSE $(wildcard *.md)
 
 # ================================================================================================
 # Rule and recipe sections
@@ -100,22 +107,22 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@ > /dev/null
 
 clean:
-	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_FILES)) $(DIST_DIR)
+	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_FILES))
 
 distclean: clean
-	rm -rf $(DIST_DIR)*.tar.gz
+	rm -rf $(PKG_NAME)-[1-9].[1-9]*
 
-$(DIST_DIR)-$(DIST_VERSION).tar.gz: $(TOOL_FILES) $(CLOUD_FILES)
+$(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_FILES) $(DOC_FILES)
 	rm -rf $(DIST_DIR)
 	mkdir $(DIST_DIR)
-	cp Makefile LICENSE README.md $(TOOL_FILES) $(DIST_DIR)
-	cp -r cloud $(DIST_DIR)
-	tar zcf $(DIST_DIR)-$(DIST_VERSION).tar.gz $(DIST_DIR)
-	rm -rf $(DIST_DIR)
+	cp $(DOC_FILES) $(SCRIPT_FILES) $(DIST_DIR)
+	mkdir $(DIST_DIR)/cloud
+	cp -r $(CLOUD_FILES) $(DIST_DIR)/cloud
+	tar zcf $(DIST_DIR).tar.gz $(DIST_DIR)
 	@echo "======================================================"
-	@echo "Created tar-ball:  $(DIST_DIR)-$(DIST_VERSION).tar.gz "
+	@echo "Created tar-ball:  $(DIST_DIR).tar.gz"
 	@echo "======================================================"
 
-dist: $(DIST_DIR)-$(DIST_VERSION).tar.gz
+dist: $(DIST_DIR).tar.gz
 
 .PHONY: all clean nodes dist distclean $(NODES)
