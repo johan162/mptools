@@ -25,6 +25,20 @@ with a minimal C/C++ development environment we would do as so:
 
 The naming convention used is thoroughly documented below in section [Node naming convention](#node-naming-convention).
 
+# Content
+- [Installing multipass](#installing-multipass)
+- [Creating customized nodes](#creating-customized-nodes)
+    - [Cloud init files](#cloud-init-files)
+    - [Examples of creating custom nodes](#examples-of-creating-custom-nodes)
+- [Creating nodes using make](#creating-nodes-using-make)
+    - [Node naming convention](#node-naming-convention)
+    - [Examples of using the Makefile directly](#examples-of-using-the-makefile-directly)
+    - [All makefile targets](#all-makefile-targets)
+- [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
+- [Aliases](#aliases)
+- [Tips and Tricks](#tips-and-tricks)
+
+
 
 # <TL;DR>
 
@@ -68,20 +82,6 @@ for a detailed explanation on how to define the node names.
    &nbsp;
 
 The rest of this README will discuss all scrips and option more in detail.
-
-
-# Content
-- [Installing multipass](#installing-multipass)
-- [Creating customized nodes](#creating-customized-nodes)
-  - [Cloud init files](#cloud-init-files) 
-  - [Examples of creating custom nodes](#examples-of-creating-custom-nodes)
-- [Creating nodes using make](#creating-nodes-using-make)
-  - [Node naming convention](#node-naming-convention)
-  - [Examples of using the Makefile directly](#examples-of-using-the-makefile-directly)
-  - [All makefile targets](#all-makefile-targets)
-- [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
-- [Aliases](#aliases)
-- [Tips and Tricks](#tips-and-tricks)
 
 
 
@@ -477,10 +477,22 @@ Mounts:         --
 * Never ever use a `systemctl daemon-reload` in a cloud-init file. This will kill the SSH daemon
   and the multipass connection to the starting node will be lost.  
   &nbsp;
+* The list command (`multipass list`) have an undocumented option `--no-ipv4` to exclude the IP
+in the output.  
+&nbsp;
 * The cloud instantiation is recorded under `/var/lib/cloud` in the node. If a customized
 node is not working this is a good place to start troubleshooting. For example, in
 `/var/lib/cloud/instance/scripts/runcmd` is the run commands specified in the `RunCmd` extracted
-as shell commands.
+as shell commands.  
+&nbsp;
+* Uninstall multipass by running  
+`sudo sh "/Library/Application Support/com.canonical.multipass/uninstall.sh"`  
+or  
+`brew uninstall --zap multipass`  
+&nbsp;  
+* Find available images `mp find`
+
+
 
 
 
