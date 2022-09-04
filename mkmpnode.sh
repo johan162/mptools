@@ -17,6 +17,7 @@ declare -i cpus=2
 declare cloudInit=
 declare mountDev=0
 declare vlist=("bionic" "focal" "impish" "jammy" "docker")
+declare -i noexecute=0
 
 # Don't edit below this line
 # --------------------------
@@ -37,6 +38,13 @@ errlog() {
 infolog() {
     [[ ${quiet_flag} -eq 0 ]] && printf "$@"
 }
+
+
+# Check we are executing from the mptools directory
+#if [[ ! -d ../mptools || ! -f ../mptools/Makefile ]]; then
+#    errlog "Must be executed from the mptools directory."
+#    exit 1
+#fi
 
 # Get version from the one true source - the makefile
 printversion() {
@@ -91,7 +99,7 @@ EOT
 }
 
 while [[ $OPTIND -le "$#" ]]; do
-    if getopts r:n:c:m:d:p:hMv o; then
+    if getopts r:c:m:d:p:hMvn o; then
         case "$o" in
             h)
                 usage "$0"
@@ -126,6 +134,9 @@ while [[ $OPTIND -le "$#" ]]; do
             v)
                 printversion "$0"
                 exit 0
+                ;;
+            n)
+                noexecute=1
                 ;;
             [?])
                 usage "$(basename "$0")"
@@ -165,28 +176,63 @@ else
         mountopt="--mount $homeDir/Devel:/home/ubuntu/Devel"
     fi
 
+    declare cinitopt
     if [[ -z $cloudInit ]]; then
         infolog "Note: No cloud file specified. Using minidev config.\n"
-        declare cinitopt="--cloud-init cloud/minidev-config.yaml"
-    elif [[ -f $cloudInit ]]; then
-        declare cinitopt="--cloud-init $cloudInit"
+        cloudInit="cloud/minidev-config.yaml"
+        SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+        declare MPTOOL_INSTALL_DIR
+
+        # Find out where we can find the cloud files
+        if [[ ! -d ${SCRIPT_DIR}/cloud ]]; then
+            if [[ -f "/usr/local/bin/mkmpnode" ]]; then
+                MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
+                MPTOOL_INSTALL_DIR=$(dirname ${MKMPNODE})
+            else
+                errlog "mptools not installed"
+                exit 1
+            fi
+        else
+            MPTOOL_INSTALL_DIR=${SCRIPT_DIR}
+        fi
+
+        if [[ -f ${cloudInit} ]]; then
+            cinitopt="--cloud-init ${cloudInit}"
+        elif [[ -f ${MPTOOL_INSTALL_DIR}/${cloudInit} ]]; then
+            cinitopt="--cloud-init ${MPTOOL_INSTALL_DIR}/${cloudInit}"
+        else
+            errlog "Internal error .Cannot locate default cloud-init file: ${MPTOOL_INSTALL_DIR}/${cloudInit}."
+            exit 1
+        fi
+    elif [[ -f ${cloudInit} ]]; then
+        cinitopt="--cloud-init ${cloudInit}"
     else
-        errlog "Specified cloud init file '$cloudInit' does not exist."
+        errlog "Specified cloud init file '${cloudInit}' does not exist."
         exit 1
     fi
 
-    infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
-    if multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer; then
-        errlog "Failed to create node!"
-        exit 1
-    fi
+    if [[ ${noexecute} -eq 0 ]]; then
+        infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
+        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer > /dev/null; then
+            errlog "Failed to create node!"
+            exit 1
+        fi
 
-    if multipass restart $nodeName; then
-        errlog "Failed to restart $nodeName.\n"
-        exit 1
-    fi
+        if ! multipass restart $nodeName > /dev/null; then
+            errlog "Failed to restart $nodeName.\n"
+            exit 1
+        fi
 
-    # Finally, give some information of the newly created node
-    multipass info $nodeName
+        # Finally, give some information of the successfully newly created node
+        echo "==================================================="
+        echo "Created" \"$nodeName\" $(date "+%Y-%m-%d %H:%M:%S")
+        echo "==================================================="
+
+        multipass info $nodeName
+    else
+        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer;
+        echo multipass restart $nodeName
+        echo multipass info $nodeName
+    fi
 
 fi

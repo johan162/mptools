@@ -10,12 +10,12 @@ set -o nounset
 set -o pipefail
 
 # Cache result ito temp file since it is a slow operation
-declare tmpfilename=$(mktemp /tmp/mplist.XXXXXXXXXXXXX)
-multipass list >$tmpfilename
+declare nodecachefile=$(mktemp /tmp/mplist.XXXXXXXXXXXXX)
+multipass list >$nodecachefile
 
 # Exit handler
 function cleanup {
-    rm -f "$tmpfilename"
+    rm -f "$nodecachefile"
 }
 
 trap cleanup EXIT
@@ -74,23 +74,52 @@ USAGE
    $name [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
 SYNOPSIS
       -h        : Print help and exit
+      -n        : No execute (dryrun)
       -s        : Silent
       -v        : Print version and exit
 EOT
 }
 
-# Check we are executing from the mptools directory
-if [[ ! -d ../mptools || ! -f ../mptools/Makefile ]]; then
-    errlog "Must be executed from the mptools directory."
-    exit 1
+declare MKMPNODE="./mkmpnode.sh"
+declare MPTOOL_DIR="."
+# Find out where mkmpnode.sh is
+if [[ ! -f ${MKMPNODE} ]]; then
+    if [[ -f "/usr/local/bin/mkmpnode" ]]; then
+        MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
+        MPTOOL_DIR=$(dirname ${MKMPNODE})
+    else
+        errlog "Cannot find mkmpnode.sh"
+        exit 1
+    fi
 fi
+
 
 declare -i quiet_flag=0
 declare nodes=""
 declare nodeList=("")
+declare -i noexec=0
+
+# Predefined cloud configs based on the infix in the node name
+declare CLOUD_CONFIG_F="cloud/fulldev-config.yaml"
+declare CLOUD_CONFIG_B="cloud/mini-config.yaml"
+declare CLOUD_CONFIG_M="cloud/minidev-config.yaml"
+
+# Predefined sizes based on the infix in the node name
+declare MACHINE_CONFIG_S="-m 500MB -d 5GB"
+declare MACHINE_CONFIG_M="-m 1GB -d 5GB"
+declare MACHINE_CONFIG_E="-m 3GB -d 5GB"
+declare MACHINE_CONFIG_L="-m 2GB -d 10GB"
+declare MACHINE_CONFIG_X="-m 4GB -d 15GB"
+declare MACHINE_CONFIG_H="-m 8GB -d 20GB"
+
+# Predefined image names corresponding to the major Ubuntu releases as specified in the node name
+declare IMAGE_UB22=jammy
+declare IMAGE_UB20=focal
+declare IMAGE_UB18=bionic
+
 
 while [[ $OPTIND -le "$#" ]]; do
-    if getopts svh o; then
+    if getopts svhn o; then
         case "$o" in
             v)
                 printversion "$0"
@@ -102,6 +131,10 @@ while [[ $OPTIND -le "$#" ]]; do
                 ;;
             s)
                 quiet_flag=1
+                ;;
+            n)
+                infolog ":: DRYRUN ::\n"
+                noexec=1
                 ;;
             [?])
                 usage "$(basename "$0")"
@@ -116,7 +149,7 @@ while [[ $OPTIND -le "$#" ]]; do
         fi
 
         # Check if this node already exist
-        if grep $nodeName <"$tmpfilename" >/dev/null; then
+        if grep $nodeName <"$nodecachefile" >/dev/null; then
             errlog "Node $nodeName already exists, skipping."
         else
             if ! exist_in_list ${nodeName} "${nodeList[@]}"; then
@@ -125,6 +158,15 @@ while [[ $OPTIND -le "$#" ]]; do
             fi
             nodeList+=("$nodeName")
             nodes+="$nodeName "
+
+            CLOUD_CONF=CLOUD_CONFIG_$(echo $nodeName|cut -c 5|tr  '[:lower:]' '[:upper:]')
+            MACHINE_SIZE=MACHINE_CONFIG_$(echo $nodeName|cut -c 6|tr  '[:lower:]' '[:upper:]')
+            IMAGE=IMAGE_UB$(echo $nodeName|cut -c 3-4|tr  '[:lower:]' '[:upper:]')
+            if [[ ${noexec} -eq 1 ]]; then
+                ${MKMPNODE} -n -r ${!IMAGE} -c ${MPTOOL_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+            else
+                ${MKMPNODE} -r ${!IMAGE} -c ${MPTOOL_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+            fi
         fi
         ((OPTIND++))
     fi
@@ -134,8 +176,6 @@ if [[ -z $nodes ]]; then
     exit 1
 fi
 
-if [[ $quiet_flag -eq 1 ]]; then
-    echo make -s NODES="${nodes}" node
-else
-    echo make NODES="${nodes}" node
-fi
+# Wait for all subprocesses to finish
+wait
+

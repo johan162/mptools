@@ -61,13 +61,17 @@ IMAGE_UB22 := jammy
 IMAGE_UB20 := focal
 IMAGE_UB18 := bionic
 
+# Get user SSH key
+SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
+
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 1.4.0
+DIST_VERSION := 2.0.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DISTCLOUD_DIR := $(DIST_DIR)/cloud
 MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
 INSTALL_PREFIX := /usr/local/share
+INSTALL_DIR := $(INSTALL_PREFIX)/$(DIST_DIR)
 INSTALL_BINDIR := /usr/local/bin
 
 # Get all our defined cloud files
@@ -91,8 +95,11 @@ all: $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 
 node: $(NODES)
 
+# Process *.in --> *.yaml
+#	envsubst < $< > $@
 %.yaml : %.in
-	cat $< | envsubst > $@
+	$(info Transforming $< --> $@)
+	@sed -e 's#\$${SSH_PUBLIC_KEY}#$(SSH_KEY)#g' -e 's/\$${USER}/${USER}/g' < $< > $@
 
 # This rule creates the given nodes according to the naming convention.
 # This requires some explanation.
@@ -112,7 +119,7 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))
-	./mkmpnode.sh -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@ > /dev/null
+	$(MAKEFILE_DIR)/mkmpnode.sh -n -r $($(IMAGE)) -c $($(CLOUD_CONF)) $($(MACHINE_SIZE)) $@ > /dev/null
 
 clean:
 	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
@@ -136,15 +143,15 @@ install: all
 	@if [ -d $(INSTALL_PREFIX)/$(DIST_DIR) ]; then echo "Package already installed under $(INSTALL_PREFIX)/$(DIST_DIR)"; exit 1; fi
 	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BINDIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BINDIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
 	mkdir -p $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
-	cp $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_PREFIX)/$(DIST_DIR)
+	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_PREFIX)/$(DIST_DIR)
 	cp $(CLOUDINIT_FILES) $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
 	chmod +x $(INSTALL_PREFIX)/$(DIST_DIR)/*.sh
 	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_PREFIX)/$(DIST_DIR)/$${files} $(INSTALL_BINDIR)/$${files%.sh}; done
-	@echo "======================================================"
+	@echo "================================================================================="
 	@echo "Installed package in: $(INSTALL_PREFIX)/$(DIST_DIR)"
 	@echo "Linked script files as:"
-	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh}; done
-	@echo "======================================================"
+	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh} "->" $(INSTALL_PREFIX)/$(DIST_DIR)/$${files}; done
+	@echo "================================================================================="
 
 uninstall:
 	rm -rf $(INSTALL_PREFIX)/$(DIST_DIR)
@@ -152,5 +159,6 @@ uninstall:
 	@echo "======================================================"
 	@echo "Uninstalled $(INSTALL_PREFIX)/$(DIST_DIR)"
 	@echo "======================================================"
+
 
 .PHONY: all clean nodes dist distclean install uninstall $(NODES)
