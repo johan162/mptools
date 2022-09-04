@@ -177,31 +177,41 @@ else
     fi
 
     declare cinitopt
+
+    # No cloud init file given. Use the default and see if it either
+    # is in ~/.mptools or in the current directory under cloud/
     if [[ -z $cloudInit ]]; then
         infolog "Note: No cloud file specified. Using minidev config.\n"
-        cloudInit="cloud/minidev-config.yaml"
+        cloudInit="minidev-config.yaml"
         SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-        declare MPTOOL_INSTALL_DIR
+#        declare MPTOOL_INSTALL_DIR
 
         # Find out where we can find the cloud files
-        if [[ ! -d ${SCRIPT_DIR}/cloud ]]; then
-            if [[ -f "/usr/local/bin/mkmpnode" ]]; then
-                MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
-                MPTOOL_INSTALL_DIR=$(dirname ${MKMPNODE})
-            else
-                errlog "mptools not installed"
-                exit 1
-            fi
-        else
-            MPTOOL_INSTALL_DIR=${SCRIPT_DIR}
-        fi
+#        if [[ ! -d ${HOME}/.mptools ]]; then
+#            if [[ -f "/usr/local/bin/mkmpnode" ]]; then
+#                MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
+#                MPTOOL_INSTALL_DIR=$(dirname ${MKMPNODE})
+#            else
+#                errlog "mptools not installed"
+#                exit 1
+#            fi
+#        else
+#            MPTOOL_INSTALL_DIR=${SCRIPT_DIR}
+#        fi
 
-        if [[ -f ${cloudInit} ]]; then
-            cinitopt="--cloud-init ${cloudInit}"
-        elif [[ -f ${MPTOOL_INSTALL_DIR}/${cloudInit} ]]; then
-            cinitopt="--cloud-init ${MPTOOL_INSTALL_DIR}/${cloudInit}"
+        # We check for the default cloud file in three possible location
+        # In a directory named "cloud" in current working directory
+        # In a directory named "cloud" from where this script is run
+        # In the persons ~/.mptools where the cloud-init files are stored after installation
+        echo "SCRIPT_DIR=${SCRIPT_DIR}"
+        if [[ -f "cloud/${cloudInit}" ]]; then
+            cinitopt="--cloud-init cloud/${cloudInit}"
+        elif [[ -f "${SCRIPT_DIR}/cloud/${cloudInit}" ]]; then
+            cinitopt="--cloud-init ${SCRIPT_DIR}/cloud/${cloudInit}"
+        elif [[ -f "${HOME}/.mptools/${cloudInit}" ]]; then
+            cinitopt="--cloud-init  ${HOME}/.mptools/${cloudInit}"
         else
-            errlog "Internal error .Cannot locate default cloud-init file: ${MPTOOL_INSTALL_DIR}/${cloudInit}."
+            errlog "Internal error .Cannot locate default cloud-init file: ${cloudInit}."
             exit 1
         fi
     elif [[ -f ${cloudInit} ]]; then

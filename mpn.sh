@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# mpn.sh
 # Create one or more multipass nodes based on the node naming convention
 #
 # Written by: Johan Persson <johan162@gmail.com>
@@ -80,13 +81,16 @@ SYNOPSIS
 EOT
 }
 
+declare INSTALL_PREFIX="/usr/local"
 declare MKMPNODE="./mkmpnode.sh"
-declare MPTOOL_DIR="."
-# Find out where mkmpnode.sh is
+declare CLOUDCONF_DIR="./cloud"
+
+# Find out where mkmpnode.sh is.
 if [[ ! -f ${MKMPNODE} ]]; then
-    if [[ -f "/usr/local/bin/mkmpnode" ]]; then
+    if [[ -f "${INSTALL_PREFIX}/bin/mkmpnode" ]]; then
+        # mptools have been installed
         MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
-        MPTOOL_DIR=$(dirname ${MKMPNODE})
+        CLOUDCONF_DIR="${HOME}/.mptools"
     else
         errlog "Cannot find mkmpnode.sh"
         exit 1
@@ -100,9 +104,9 @@ declare nodeList=("")
 declare -i noexec=0
 
 # Predefined cloud configs based on the infix in the node name
-declare CLOUD_CONFIG_F="cloud/fulldev-config.yaml"
-declare CLOUD_CONFIG_B="cloud/mini-config.yaml"
-declare CLOUD_CONFIG_M="cloud/minidev-config.yaml"
+declare CLOUD_CONFIG_F="fulldev-config.yaml"
+declare CLOUD_CONFIG_B="mini-config.yaml"
+declare CLOUD_CONFIG_M="minidev-config.yaml"
 
 # Predefined sizes based on the infix in the node name
 declare MACHINE_CONFIG_S="-m 500MB -d 5GB"
@@ -162,10 +166,11 @@ while [[ $OPTIND -le "$#" ]]; do
             CLOUD_CONF=CLOUD_CONFIG_$(echo $nodeName|cut -c 5|tr  '[:lower:]' '[:upper:]')
             MACHINE_SIZE=MACHINE_CONFIG_$(echo $nodeName|cut -c 6|tr  '[:lower:]' '[:upper:]')
             IMAGE=IMAGE_UB$(echo $nodeName|cut -c 3-4|tr  '[:lower:]' '[:upper:]')
+
             if [[ ${noexec} -eq 1 ]]; then
-                ${MKMPNODE} -n -r ${!IMAGE} -c ${MPTOOL_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE} -n -r ${!IMAGE} -c ${CLOUDCONF_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
             else
-                ${MKMPNODE} -r ${!IMAGE} -c ${MPTOOL_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE} -r ${!IMAGE} -c ${CLOUDCONF_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
             fi
         fi
         ((OPTIND++))

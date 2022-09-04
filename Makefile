@@ -68,11 +68,12 @@ SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 PKG_NAME := mptools
 DIST_VERSION := 2.0.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
-DISTCLOUD_DIR := $(DIST_DIR)/cloud
 MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
-INSTALL_PREFIX := /usr/local/share
-INSTALL_DIR := $(INSTALL_PREFIX)/$(DIST_DIR)
-INSTALL_BINDIR := /usr/local/bin
+INSTALL_PREFIX := /usr/local
+INSTALL_DIR := $(INSTALL_PREFIX)/share/$(DIST_DIR)
+DISTCLOUD_DIR := $(INSTALL_DIR)/cloud
+INSTALL_BINDIR := $(INSTALL_PREFIX)/bin
+USER_CLOUDFILES_DIR := $${HOME}/.mptools
 
 # Get all our defined cloud files
 CLOUD_TEMPLATE_FILES := $(wildcard cloud/*.in)
@@ -142,23 +143,43 @@ dist: $(DIST_DIR).tar.gz
 install: all
 	@if [ -d $(INSTALL_PREFIX)/$(DIST_DIR) ]; then echo "Package already installed under $(INSTALL_PREFIX)/$(DIST_DIR)"; exit 1; fi
 	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BINDIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BINDIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
-	mkdir -p $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
-	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_PREFIX)/$(DIST_DIR)
-	cp $(CLOUDINIT_FILES) $(INSTALL_PREFIX)/$(DISTCLOUD_DIR)
-	chmod +x $(INSTALL_PREFIX)/$(DIST_DIR)/*.sh
-	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_PREFIX)/$(DIST_DIR)/$${files} $(INSTALL_BINDIR)/$${files%.sh}; done
+	mkdir -p $(DISTCLOUD_DIR)
+	cp $(CLOUD_TEMPLATE_FILES) $(DISTCLOUD_DIR)
+	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
+	mkdir $(USER_CLOUDFILES_DIR)
+	cp $(CLOUDINIT_FILES) $(USER_CLOUDFILES_DIR)
+	chmod +x $(INSTALL_DIR)/*.sh
+	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BINDIR)/$${files%.sh}; done
 	@echo "================================================================================="
-	@echo "Installed package in: $(INSTALL_PREFIX)/$(DIST_DIR)"
+	@echo "Installed package in: \"$(INSTALL_DIR)\""
 	@echo "Linked script files as:"
-	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh} "->" $(INSTALL_PREFIX)/$(DIST_DIR)/$${files}; done
+	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh} "->" $(INSTALL_DIR)/$${files}; done
+	@echo "User specific cloud-init files installed in: \"$(USER_CLOUDFILES_DIR)\""
 	@echo "================================================================================="
 
+# Since we cannot know if the uninstall is run after we upgrades this script
+# we cannot assume that the current installation version is the same as the one
+# already installed. For that reason we find the installed version by backtracking
+# the link from the installed binaries to figure out the previoud installed version.
+# UDIR := $(shell dirname $$(readlink $(INSTALL_BINDIR)/mkmpnode))
+# rm -rf $$(dirname $$(readlink $(INSTALL_BINDIR)/mkmpnode));
 uninstall:
-	rm -rf $(INSTALL_PREFIX)/$(DIST_DIR)
+	if [[ -f $(INSTALL_BINDIR)/mkmpnode ]] || [[ -f $(INSTALL_BINDIR)/mpn ]]; then  \
+	  rm -rf $(INSTALL_PREFIX)/share/mptools-*  ;                             \
+	else                                                                       \
+	  echo "mptools does not seemed installed. Aborting uninstall target.";                                        \
+	  exit 1;                                                                  \
+	fi
+	rm -rf $(USER_CLOUDFILES_DIR)
 	for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BINDIR)/$${files%.sh}; done
 	@echo "======================================================"
-	@echo "Uninstalled $(INSTALL_PREFIX)/$(DIST_DIR)"
+	@echo Uninstalled mptools.
+	@echo Note: A 'rehash' or a restart of the shell is necessary
+	@echo remove the cached binaries in shell completions.
 	@echo "======================================================"
 
+
+tst:
+	echo $(USER_CLOUDFILES_DIR)
 
 .PHONY: all clean nodes dist distclean install uninstall $(NODES)
