@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# mkmpnode.sh
 # Setup a multipass node
 #
 # Written by: Johan Persson <johan162@gmail.com>
@@ -14,10 +15,12 @@ declare nodeName=
 declare memory="500M"
 declare disk="5G"
 declare -i cpus=2
-declare cloudInit=
+declare defaultCloudInit=
 declare mountDev=0
 declare vlist=("bionic" "focal" "impish" "jammy" "docker")
 declare -i noexecute=0
+declare cloudInit=""
+declare defaultCloudInit="minidev-config.yaml"
 
 # Don't edit below this line
 # --------------------------
@@ -38,7 +41,6 @@ errlog() {
 infolog() {
     [[ ${quiet_flag} -eq 0 ]] && printf "$@"
 }
-
 
 # Check we are executing from the mptools directory
 #if [[ ! -d ../mptools || ! -f ../mptools/Makefile ]]; then
@@ -81,16 +83,17 @@ usage() {
     name=$(basename "$0")
     cat <<EOT
 NAME
-   $name
+   $name - Create multipass nodes with a specified (or default) cloud-init file
 USAGE
    $name [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
       -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
-      -c FILE   : Cloud config file (${cloudInit})
+      -c FILE   : Cloud config file (${defaultCloudInit})
       -m SIZE   : Memory size, defaults (${memory})
       -d SIZE   : Disk size, defaults (${disk}GB)
       -p NUM    : Number of CPUs (${cpus})
       -M        : Mount ${HOME}/Devel inside node
+      -n        : No execution. Only display actions.
       -q        : Quiet  (no output to stdout)
       -v        : Print version and exit
       -h        : Print help and exit
@@ -136,6 +139,7 @@ while [[ $OPTIND -le "$#" ]]; do
                 exit 0
                 ;;
             n)
+                infolog ":: DRYRUN mkmpnode ::\n"
                 noexecute=1
                 ;;
             [?])
@@ -181,37 +185,21 @@ else
     # No cloud init file given. Use the default and see if it either
     # is in ~/.mptools or in the current directory under cloud/
     if [[ -z $cloudInit ]]; then
-        infolog "Note: No cloud file specified. Using minidev config.\n"
-        cloudInit="minidev-config.yaml"
-        SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-#        declare MPTOOL_INSTALL_DIR
-
-        # Find out where we can find the cloud files
-#        if [[ ! -d ${HOME}/.mptools ]]; then
-#            if [[ -f "/usr/local/bin/mkmpnode" ]]; then
-#                MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
-#                MPTOOL_INSTALL_DIR=$(dirname ${MKMPNODE})
-#            else
-#                errlog "mptools not installed"
-#                exit 1
-#            fi
-#        else
-#            MPTOOL_INSTALL_DIR=${SCRIPT_DIR}
-#        fi
+        infolog "Note: No cloud file specified. Using ${defaultCloudInit}.\n"
+        SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
         # We check for the default cloud file in three possible location
         # In a directory named "cloud" in current working directory
         # In a directory named "cloud" from where this script is run
         # In the persons ~/.mptools where the cloud-init files are stored after installation
-        echo "SCRIPT_DIR=${SCRIPT_DIR}"
-        if [[ -f "cloud/${cloudInit}" ]]; then
-            cinitopt="--cloud-init cloud/${cloudInit}"
-        elif [[ -f "${SCRIPT_DIR}/cloud/${cloudInit}" ]]; then
-            cinitopt="--cloud-init ${SCRIPT_DIR}/cloud/${cloudInit}"
-        elif [[ -f "${HOME}/.mptools/${cloudInit}" ]]; then
-            cinitopt="--cloud-init  ${HOME}/.mptools/${cloudInit}"
+        if [[ -f "cloud/${defaultCloudInit}" ]]; then
+            cinitopt="--cloud-init cloud/${defaultCloudInit}"
+        elif [[ -f "${SCRIPT_DIR}/cloud/${defaultCloudInit}" ]]; then
+            cinitopt="--cloud-init ${SCRIPT_DIR}/cloud/${defaultCloudInit}"
+        elif [[ -f "${HOME}/.mptools/${defaultCloudInit}" ]]; then
+            cinitopt="--cloud-init  ${HOME}/.mptools/${defaultCloudInit}"
         else
-            errlog "Internal error .Cannot locate default cloud-init file: ${cloudInit}."
+            errlog "Internal error .Cannot locate default cloud-init file: ${defaultCloudInit}."
             exit 1
         fi
     elif [[ -f ${cloudInit} ]]; then
@@ -223,12 +211,12 @@ else
 
     if [[ ${noexecute} -eq 0 ]]; then
         infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
-        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer > /dev/null; then
+        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer >/dev/null; then
             errlog "Failed to create node!"
             exit 1
         fi
 
-        if ! multipass restart $nodeName > /dev/null; then
+        if ! multipass restart $nodeName >/dev/null; then
             errlog "Failed to restart $nodeName.\n"
             exit 1
         fi
@@ -240,7 +228,7 @@ else
 
         multipass info $nodeName
     else
-        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer;
+        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
         echo multipass restart $nodeName
         echo multipass info $nodeName
     fi
