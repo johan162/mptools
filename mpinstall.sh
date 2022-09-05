@@ -98,18 +98,6 @@ alias mpsu="multipass suspend"
 alias mpsua="multipass suspend --all"
 EOF
     fi
-
-    if grep 'export SSH_PUBLIC_KEY"' "${HOME}"/.zshenv >/dev/null; then
-        infolog "SSH_PUBLIC_KEY will not be added to .zshenv as it has already been added."
-    else
-        cat <<EOF >>"${HOME}"/.zshenv
-# ===========================================
-# Automatically added by mpinstall.sh
-# User SSH key
-# ===========================================
-export SSH_PUBLIC_KEY=$(cat "${HOME}"/.ssh/id_rsa.pub)
-EOF
-    fi
 fi
 
 # Now do the install through homebrew
