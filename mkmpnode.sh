@@ -182,26 +182,13 @@ else
     declare cinitopt=""
     SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-    # No cloud init file given. Use the default and see if it either
-    # is in ~/.mptools or in the current directory under cloud/
+    # We must have a cloud-init file
     if [[ -z $cloudInit ]]; then
         infolog "Note: No cloud file specified. Using ${defaultCloudInit}.\n"
+        cloudInit=${defaultCloudInit}
+    fi
 
-        # We check for the default cloud file in three possible location
-        # In a directory named "cloud" in current working directory
-        # In a directory named "cloud" from where this script is run
-        # In the persons ~/.mptools where the cloud-init files are stored after installation
-        if [[ -f "./cloud/${defaultCloudInit}" ]]; then
-            cinitopt="--cloud-init cloud/${defaultCloudInit}"
-        elif [[ -f "${SCRIPT_DIR}/cloud/${defaultCloudInit}" ]]; then
-            cinitopt="--cloud-init ${SCRIPT_DIR}/cloud/${defaultCloudInit}"
-        elif [[ -f "${HOME}/.mptools/${defaultCloudInit}" ]]; then
-            cinitopt="--cloud-init  ${HOME}/.mptools/${defaultCloudInit}"
-        else
-            errlog "Internal error .Cannot locate default cloud-init file: ${defaultCloudInit}."
-            exit 1
-        fi
-    elif [[ -f ${cloudInit} ]]; then
+    if [[ -f ${cloudInit} ]]; then
         cinitopt="--cloud-init ${cloudInit}"
     elif [[ ${cloudInit} == $(basename ${cloudInit}) ]]; then
         # o path provided so check if cloud-init file exists in current directory
