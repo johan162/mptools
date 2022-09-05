@@ -68,12 +68,15 @@ SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 PKG_NAME := mptools
 DIST_VERSION := 2.0.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
+DIST_CLOUDDIR := $(DIST_DIR)/cloud
+
 MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
+
 INSTALL_PREFIX := /usr/local
 INSTALL_DIR := $(INSTALL_PREFIX)/share/$(DIST_DIR)
-DISTCLOUD_DIR := $(INSTALL_DIR)/cloud
-INSTALL_BINDIR := $(INSTALL_PREFIX)/bin
-USER_CLOUDFILES_DIR := $${HOME}/.mptools
+INSTALL_CLOUDINIT_DIR := $(INSTALL_DIR)/cloud
+INSTALL_BIN_DIR := $(INSTALL_PREFIX)/bin
+INSTALL_USERCLOUDINIT_DIR := $${HOME}/.mptools
 
 # Get all our defined cloud files
 CLOUD_TEMPLATE_FILES := $(wildcard cloud/*.in)
@@ -97,7 +100,7 @@ all: $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 node: $(NODES)
 
 # Process *.in --> *.yaml
-#	envsubst < $< > $@
+# Note: Use '#' as split character in sed since '/' is a valid character in base64
 %.yaml : %.in
 	$(info Transforming $< --> $@)
 	@sed -e 's#\$${SSH_PUBLIC_KEY}#$(SSH_KEY)#g' -e 's/\$${USER}/${USER}/g' < $< > $@
@@ -130,9 +133,9 @@ distclean: clean
 
 $(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_TEMPLATE_FILES) $(DOC_FILES)
 	rm -rf $(DIST_DIR)
-	mkdir -p $(DISTCLOUD_DIR)
+	mkdir -p $(DIST_CLOUDDIR)
 	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(DIST_DIR)
-	cp $(CLOUD_TEMPLATE_FILES) $(DISTCLOUD_DIR)
+	cp $(CLOUD_TEMPLATE_FILES) $(DIST_CLOUDDIR)
 	tar zcf $(DIST_DIR).tar.gz $(DIST_DIR)
 	@echo "======================================================"
 	@echo "Created:  $(DIST_DIR).tar.gz"
@@ -141,45 +144,61 @@ $(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_TEMPLATE_FILES) $(DOC_FILES)
 dist: $(DIST_DIR).tar.gz
 
 install: all
-	@if [ -d $(INSTALL_PREFIX)/$(DIST_DIR) ]; then echo "Package already installed under $(INSTALL_PREFIX)/$(DIST_DIR)"; exit 1; fi
-	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BINDIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BINDIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
-	mkdir -p $(DISTCLOUD_DIR)
-	cp $(CLOUD_TEMPLATE_FILES) $(DISTCLOUD_DIR)
+	@if [ -d $(INSTALL_DIR) ]; then echo "Package already installed under: $(INSTALL_DIR)"; exit 1; fi
+	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BIN_DIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BIN_DIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
+	mkdir -p $(INSTALL_CLOUDINIT_DIR)
+	cp $(CLOUD_TEMPLATE_FILES) $(INSTALL_CLOUDINIT_DIR)
 	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
-	mkdir $(USER_CLOUDFILES_DIR)
-	cp $(CLOUDINIT_FILES) $(USER_CLOUDFILES_DIR)
+	mkdir $(INSTALL_USERCLOUDINIT_DIR)
+	cp $(CLOUDINIT_FILES) $(INSTALL_USERCLOUDINIT_DIR)
 	chmod +x $(INSTALL_DIR)/*.sh
-	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BINDIR)/$${files%.sh}; done
+	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BIN_DIR)/$${files%.sh}; done
 	@echo "================================================================================="
 	@echo "Installed package in: \"$(INSTALL_DIR)\""
 	@echo "Linked script files as:"
-	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BINDIR)/$${files%.sh} "->" $(INSTALL_DIR)/$${files}; done
-	@echo "User specific cloud-init files installed in: \"$(USER_CLOUDFILES_DIR)\""
+	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BIN_DIR)/$${files%.sh} "->" $(INSTALL_DIR)/$${files}; done
+	@echo "Cloud-init files installed in: \"$(INSTALL_USERCLOUDINIT_DIR)\""
 	@echo "================================================================================="
 
 # Since we cannot know if the uninstall is run after we upgrades this script
 # we cannot assume that the current installation version is the same as the one
 # already installed. For that reason we find the installed version by backtracking
-# the link from the installed binaries to figure out the previoud installed version.
-# UDIR := $(shell dirname $$(readlink $(INSTALL_BINDIR)/mkmpnode))
-# rm -rf $$(dirname $$(readlink $(INSTALL_BINDIR)/mkmpnode));
+# the link from the installed binaries to figure out the previous installed version.
 uninstall:
-	if [[ -f $(INSTALL_BINDIR)/mkmpnode ]] || [[ -f $(INSTALL_BINDIR)/mpn ]]; then  \
-	  rm -rf $(INSTALL_PREFIX)/share/mptools-*  ;                             \
-	else                                                                       \
-	  echo "mptools does not seemed installed. Aborting uninstall target.";                                        \
-	  exit 1;                                                                  \
+	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]]; then           \
+      echo "================================================================" ;                 \
+      INSTALLED_DIR=$$(dirname $$(readlink $(INSTALL_BIN_DIR)/mkmpnode));                       \
+	  echo "Uninstall successful, removed: " ;                                                  \
+	  echo " -" $${INSTALLED_DIR};                                                              \
+	  echo " -" $(INSTALL_USERCLOUDINIT_DIR);                                                   \
+	  for files in $(SCRIPT_FILES); do echo " -" $(INSTALL_BIN_DIR)/$${files%.sh}; done;        \
+	  rm -rf $${INSTALLED_DIR};                                                                 \
+	  rm -rf $(INSTALL_USERCLOUDINIT_DIR) ;                                                     \
+	  for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BIN_DIR)/$${files%.sh}; done;            \
+	  echo "================================================================" ;                 \
+	else                                                                                        \
+	  echo "mptools not installed. Nothing to remove.";                                         \
 	fi
-	rm -rf $(USER_CLOUDFILES_DIR)
-	for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BINDIR)/$${files%.sh}; done
-	@echo "======================================================"
-	@echo Uninstalled mptools.
-	@echo Note: A 'rehash' or a restart of the shell is necessary
-	@echo remove the cached binaries in shell completions.
-	@echo "======================================================"
 
+# Used to help debug makefile
+_dbg:
+	@echo MAKEFILE_DIR=$(MAKEFILE_DIR)
+	@echo "----------------"
+	@echo "--- PKG & DIST"
+	@echo "----------------"
+	@echo PKG_NAME=$(PKG_NAME)
+	@echo DIST_VERSION=$(DIST_VERSION)
+	@echo DIST_DIR=$(DIST_DIR)
+	@echo DIST_CLOUDDIR=$(DIST_CLOUDDIR)
+	@echo "----------------"
+	@echo "--- INSTALL"
+	@echo "----------------"
+	@echo INSTALL_USERCLOUDINIT_DIR=$(INSTALL_USERCLOUDINIT_DIR)
+	@echo INSTALL_PREFIX=$(INSTALL_PREFIX)
+	@echo INSTALL_DIR=$(INSTALL_DIR)
+	@echo INSTALL_CLOUDINIT_DIR=$(INSTALL_CLOUDINIT_DIR)
+	@echo INSTALL_BIN_DIR=$(INSTALL_BIN_DIR)
+	@echo INSTALL_USERCLOUDINIT_DIR=$(INSTALL_USERCLOUDINIT_DIR)
 
-tst:
-	echo $(USER_CLOUDFILES_DIR)
 
 .PHONY: all clean nodes dist distclean install uninstall $(NODES)
