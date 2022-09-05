@@ -70,33 +70,56 @@ usage() {
     declare name=$(basename $0)
     cat <<EOT
 NAME
-   $name
+   $name - Create multipass node by naming convention
 USAGE
    $name [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
 SYNOPSIS
       -h        : Print help and exit
-      -n        : No execute (dryrun)
+      -n        : No execution. Only display actions.
       -s        : Silent
       -v        : Print version and exit
+
+The node name will control the size and capacity of the node.
+ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
+MAJOR_RELEASE=[18|20|22]
+CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
+SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous]
+NODE_NUMBER=[0-9]{2}
 EOT
 }
 
 declare INSTALL_PREFIX="/usr/local"
-declare MKMPNODE="./mkmpnode.sh"
-declare CLOUDCONF_DIR="./cloud"
+declare INSTALL_BIN_DIR="${INSTALL_PREFIX}/bin"
+declare MKMPNODE_SCRIPT="./mkmpnode.sh"
+declare INSTALL_USERCLOUDINIT_DIR=${HOME}/.mptools
 
-# Find out where mkmpnode.sh is.
-if [[ ! -f ${MKMPNODE} ]]; then
-    if [[ -f "${INSTALL_PREFIX}/bin/mkmpnode" ]]; then
-        # mptools have been installed
-        MKMPNODE=$(readlink /usr/local/bin/mkmpnode)
-        CLOUDCONF_DIR="${HOME}/.mptools"
+declare SCRIPT_DIR=""
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+# Find out where mkmpnode.sh is
+if [[ ! -f ${MKMPNODE_SCRIPT} ]]; then
+    if [[ -L "${INSTALL_BIN_DIR}/mkmpnode" ]]; then
+        MKMPNODE_SCRIPT=$(readlink ${INSTALL_BIN_DIR}/mkmpnode)
     else
-        errlog "Cannot find mkmpnode.sh"
-        exit 1
+        MKMPNODE_SCRIPT="${SCRIPT_DIR}/mkmpnode.sh"
+        if [[ ! -f "$MKMPNODE_SCRIPT" ]]; then
+            errlog "Cannot find mkmpnode.sh"
+            exit 1
+        fi
     fi
 fi
 
+# Find out where the cloud-init files are
+if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+    INSTALL_USERCLOUDINIT_DIR="./cloud"
+    if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+        INSTALL_USERCLOUDINIT_DIR="${SCRIPT_DIR}/cloud"
+        if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+            errlog "Cannot locate cloud files"
+            exit 1
+        fi
+    fi
+fi
 
 declare -i quiet_flag=0
 declare nodes=""
@@ -121,7 +144,6 @@ declare IMAGE_UB22=jammy
 declare IMAGE_UB20=focal
 declare IMAGE_UB18=bionic
 
-
 while [[ $OPTIND -le "$#" ]]; do
     if getopts svhn o; then
         case "$o" in
@@ -137,7 +159,7 @@ while [[ $OPTIND -le "$#" ]]; do
                 quiet_flag=1
                 ;;
             n)
-                infolog ":: DRYRUN ::\n"
+                infolog ":: DRYRUN mpn ::\n"
                 noexec=1
                 ;;
             [?])
@@ -163,14 +185,14 @@ while [[ $OPTIND -le "$#" ]]; do
             nodeList+=("$nodeName")
             nodes+="$nodeName "
 
-            CLOUD_CONF=CLOUD_CONFIG_$(echo $nodeName|cut -c 5|tr  '[:lower:]' '[:upper:]')
-            MACHINE_SIZE=MACHINE_CONFIG_$(echo $nodeName|cut -c 6|tr  '[:lower:]' '[:upper:]')
-            IMAGE=IMAGE_UB$(echo $nodeName|cut -c 3-4|tr  '[:lower:]' '[:upper:]')
+            CLOUD_CONF=CLOUD_CONFIG_$(echo $nodeName | cut -c 5 | tr '[:lower:]' '[:upper:]')
+            MACHINE_SIZE=MACHINE_CONFIG_$(echo $nodeName | cut -c 6 | tr '[:lower:]' '[:upper:]')
+            IMAGE=IMAGE_UB$(echo $nodeName | cut -c 3-4 | tr '[:lower:]' '[:upper:]')
 
             if [[ ${noexec} -eq 1 ]]; then
-                ${MKMPNODE} -n -r ${!IMAGE} -c ${CLOUDCONF_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE_SCRIPT} -n -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
             else
-                ${MKMPNODE} -r ${!IMAGE} -c ${CLOUDCONF_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE_SCRIPT} -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
             fi
         fi
         ((OPTIND++))
@@ -183,4 +205,3 @@ fi
 
 # Wait for all subprocesses to finish
 wait
-
