@@ -13,6 +13,7 @@ The naming convention used is thoroughly documented below in section [Node namin
 
 # Content
 - [Installing the package](#installing-the-package)
+    - [Changing install location](#changing-install-location)
 - [Quickstart](#quickstart)
 - [Installing multipass](#installing-multipass)
 - [Creating generic nodes](#creating-generic-nodes)
@@ -56,12 +57,35 @@ The naming convention used is thoroughly documented below in section [Node namin
     ```
     **Note:** This requires [homebrew](https://brew.sh/) to be installed and a 
     warning will be given if not.  
-   &nbsp;  
+   &nbsp;
 
 >**Tip:** *The script can also be run directly from the downloaded package directory (e.g. mptools-2.0.0). 
 > The one thing to remember is that the script files are named with the `*.sh` suffix. When the
 > package is installed the symlink is the basename of the script without this suffix
 > to make it slightly easier to call the script.*
+
+## Changing install location
+| [back to content table](#content) |
+
+By default the scripts will ned installed 
+with the prefix `/usr/local` so that the package will be installed under `/usr/local/share` 
+and the binaries will be linked in `/usr/local/bin`.
+
+This can be changed by adjusting the `INSTALL_PREFIX`
+makefile variable either permanently in the `Makefile` or as an override in the call to make. 
+So for example, to install into `/usr/share` and `/usr/bin`, i.e using the prefix `/usr`
+the following invocation would be needed:
+
+```shell
+% make INSTALL_PREFIX=/usr install
+```
+
+Remember, the same prefix has to be used when uninstalling the package, i.e.
+
+```shell
+% make INSTALL_PREFIX=/usr uninstall
+```
+
 
 # Quickstart 
 | [back to content table](#content) |
@@ -396,24 +420,25 @@ created with the `mkmpnode.sh` directly using the `-p` option.*
 # Creating nodes using make
 | [back to content table ](#content)|
 
+>**Note:** This is only documented in oder ot explain some
+> "advanced" concept in the makefile, mostly for historic reasons
+> and for those interested in novel usage of makefiles.
+> It is recommended to use the `mpn` script instead
+
 The previous section showed how nodes could be manually created by giving a few
-parameters to the `mkmpnode.sh` script. However, there is an easier way. By using the
-supplied makefile it is possible to create nodes without giving all the parameters
-but instead just give the node a very specific name.
+parameters to the `mkmpnode` script as well as the simplified method with 
+`mpn` using a strict naming convention of the nodes.
 
-> There is also a wrapper script `mpn.sh` described in the next section that slightly
-> simplifies the calling to `make`
+The makefile was the original method of creating nodes and for historic reason
+we finish with a short description of how the this method works.
 
-This is based on a simple node naming schema where the node name itself
-specify what base image and what cloud init configuration and
-machine size should be used as explained below.
+The makefile method is functionally almost identical to the method
+with specifically named nodes with `mpn` as described above.
+
+This is done with the makefile target `node`.
 
 ## Examples of using the Makefile directly
 | [back to content table ](#content)|
-
->**Note:** The easier way is to use the  wrapper script `mpn.sh` as
-> described in section [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
-> that uses this `Makefile` "under the hood".
 
 The makefile is used as the driver to create these named nodes. By default,
 the makefile have three nodes predefined which are created as so
@@ -435,9 +460,8 @@ So for example to build up to four nodes in parallel call
 % make -j4 node
 ```
 
-
 As their names suggest these nodes are created with a full development environment based on the
-cloud init template `cloud/fulldev-config.in` which installs a complete C/C++ development 
+cloud init template `fulldev-config.in` which installs a complete C/C++ development 
 environment with some of the most commonly used libraries. All created machines are small.
 
 In order to create a custom set of nodes the node names can either:
@@ -468,11 +492,6 @@ actual node creating script
 Which will create two more large "jammy" (Ubuntu 22 LTS) nodes and 
 one x-large "bionic" (Ubuntu 18 LTS) node exactly as the node names 
 specified.
-
-Again, use `-j` to build nodes in parallel.
-
-It should now be obvious how to create custom nodes using the node-naming method
-together with the makefile.
 
 ## Makefile targets
 | [back to content table ](#content)|
