@@ -345,9 +345,13 @@ subnetwork that we are currently on (e.g. from another MP node or from the host)
 # Creating nodes using naming conventions
 | [back to content table ](#content)|
 
-In the section above we showed how to create nodes "manually" calling the makefile
-directly. To further simplify this a small wrapper script `mpn.sh`
-("**M**ultipass-**N**ode") exists.
+To further simplify the node creation the nodes can be 
+both created and specified in one call to `mpn`
+("**M**ultipass-**N**odes") script. This is accomplished 
+by using a specific way of naming the nodes
+that also instructs `mpn` exactly how those nodes should be created. 
+
+The naming convention is described in the next section.
 
 ```text
 NAME
@@ -368,21 +372,28 @@ The node name will control the size and capacity of the node.
  - NODE_NUMBER=[0-9]{2}
 ```
 
-To create nodes one simply specifies one or more nodes using the previous discussed naming
-format as arguments as so:
+To create nodes one simply specifies one or more nodes using the naming
+format as arguments (see next section) for example:
 
 ```shell
 % mpn ub18fs01 ub20ml01 ub22fl01
 ```
+This will create three new nodes based on Ubuntu 18, 20 and 22 LTS images. 
+The Ubuntu 18, and the Ubuntu 22 will both have  
+ a full development environment in a "small" node and "large" node respectively.
 
-When creating multiple new nodes the script will kick of up to four parallel  node
+The middle Ubuntu 20 based node will be a minimal development environment
+in a "large" node.
+
+
+When creating multiple nodes the script will kick of up to four parallel  node
 creations. This greatly reduces the total build/creation time.
 
 ## Node naming convention 
 | [back to content table ](#content)|
 
 ```text
-ub&lt;MAJOR_RELEASE>&lt;CONFIG>&lt;SIZE>&lt;NODE_NUMBER>
+ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 ```
 
 <table>
