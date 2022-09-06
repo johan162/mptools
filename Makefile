@@ -146,7 +146,8 @@ dist: $(DIST_DIR).tar.gz
 install: all
 	@if [ -d $(INSTALL_DIR) ]; then echo "Package already installed under: $(INSTALL_DIR)"; exit 1; fi
 	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BIN_DIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BIN_DIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
-	mkdir -p $(INSTALL_CLOUDINIT_DIR)
+	if [[ ! -d $(INSTALL_CLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_CLOUDINIT_DIR); fi
+	if [[ ! -d $(INSTALL_BIN_DIR) ]]; then mkdir -p $(INSTALL_BIN_DIR); fi
 	cp $(CLOUD_TEMPLATE_FILES) $(INSTALL_CLOUDINIT_DIR)
 	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
 	mkdir $(INSTALL_USERCLOUDINIT_DIR)
