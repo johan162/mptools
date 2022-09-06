@@ -1,150 +1,177 @@
 # mptools
 
-A set of utility scripts for macOS to both install `multipass` (with adaptations) and create `multipass` 
-nodes initialized with the help of cloud config files. The scripts allow for several
+A set of utility programs for macOS to both help with installation of `multipass` 
+(with adaptations) and create `multipass` 
+nodes initialized with the help of cloud-init config files. These scripts allow for several
 levels of usage depending on needs.
 
 In its simplest form (after installing) nodes can be created using a naming convention
 that specifies how to initialize the node as well as (some of) the specification for
 the virtual machine such as RAM and disk.
 
-So, for example to create two medium-sized nodes with a full C/C++ development environment
-with common libraries and a GNU C/C++ toolchain based on Ubuntu 22 LTS one would do as so:
-
-```shell
-% ./mpn.sh ub22fm01 ub22fm02
-```
-
-If we instead had wanted small nodes based on Ubuntu 18 LTS
-with a minimal C/C++ development environment we would do as so:
-
-
-```shell
-% ./mpn.sh ub18ms01 ub18ms02
-```
-
 The naming convention used is thoroughly documented below in section [Node naming convention](#node-naming-convention).
 
 # Content
+- [Installing the package](#installing-the-package)
+- [Quickstart](#quickstart)
 - [Installing multipass](#installing-multipass)
-- [Creating customized nodes](#creating-customized-nodes)
+- [Creating generic nodes](#creating-generic-nodes)
     - [Cloud init files](#cloud-init-files)
+    - [Resolving location of cloud-init files](#resolving-location-of-cloud-init-files)
     - [Examples of creating custom nodes](#examples-of-creating-custom-nodes)
-- [Creating nodes using make](#creating-nodes-using-make)
+- [Creating nodes using naming conventions](#creating-nodes-using-naming-conventions)
     - [Node naming convention](#node-naming-convention)
+- [Creating nodes using make](#creating-nodes-using-make)
     - [Examples of using the Makefile directly](#examples-of-using-the-makefile-directly)
-    - [All makefile targets](#all-makefile-targets)
-- [Using wrapper script to create nodes](#using-wrapper-script-to-create-nodes)
+    - [Makefile targets](#makefile-targets)
 - [Aliases](#aliases)
 - [Tips and Tricks](#tips-and-tricks)
 
 
 
-# <TL;DR>
+# Installing the package
 
-Do the following to install `multipass` with the help of one of the utility scripts included
-and create the default (pre-defined) nodes.
+>**Note:** *It is recommended to download an official release tag as there is no guarantee that the latest `main` branch is ready for deployment.*
 
->***Pre-requisite: Make sure you have [homebrew](https://brew.sh/)  installed and 
-that the current user have a set of SSH keys.*** 
-
-&nbsp;
-
-1. If `multipass` is not already installed then Install `multipass` by running
-
+1. Download, unpack and install the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
     ```shell
-   % ./mpinstall.sh
-   ```    
-   **Note:** If `multipass` is already installed a warning will be printed.   
-   **Note:** The installation script will also add `SSH_PUBLIC_KEY` environment variable
-   since that is needed for proper cloud init file configuration.   
-   &nbsp;
+    % tar xzf mptools-2.0.0.tar.gz
+    % cd mptools-2.0.0
+    % make install
+    ```
+   This will install the programs under `/usr/local/bin` so you either have to restart
+   the terminal or call `rehash` to update the shell auto-completion hash.  
+   &nbsp;  
+   In addition to installing the scripts it will also create a hidden directory 
+   in the current users home directory at `~/.mptools`. In that directory a number 
+   of customized cloud-init files will be stored. These are customized with the
+   current users public SSH key as well as also setting up user account with the
+   same name as the current user in the created nodes.    
+   &nbsp;  
+   This setup will then make it simple to ssh into the node as `% ssh 192.168.64.12` (assuming this is the nodes IPv4 address.)  
+   &nbsp;  
+2. If multipass is not installed then do this with the utility program provided
+    ```shell
+    % mpinstall
+    ```
+    **Note:** This requires [homebrew](https://brew.sh/) to be installed and a 
+    warning will be given if not.  
+   &nbsp;  
 
-2. To create customized nodes use the wrapper script `mpn.sh` ("**M**ultipass-**N**ode") 
-with specified node names according to the node-naming specifications. 
-See section [Node naming convention](#node-naming-convention)
-for a detailed explanation on how to define the node names.   
-&nbsp;  
-    An example will illustrate the simple convention used:
+>**Tip:** *The script can also be run directly from the downloaded package directory (e.g. mptools-2.0.0). 
+> The one thing to remember is that the script files are named with the `*.sh` suffix. When the
+> package is installed the symlink is the basename of the script without this suffix
+> to make it slightly easier to call the script.*
+
+# Quickstart 
+| [back to content table](#content) |
+
+New nodes can now be created with either `mkmpnode` or `mpn`:  
+   &nbsp;
+   * `mkmpnode` - (*Make Multipass Node*). A generic utility to create a single node
+   with arbitrary specifications and specified (or default) cloud-init files. Run `mkmpnode -h` for an explanation and options.  
+     &nbsp;  
     
-    ```shell
-    % ./mpn.sh ub20fl01 u18ms01
-    ```  
-   This will after roughly 2-3 minutes create two nodes named `ub20fl01` and `ub20ms01`.  
-   &nbsp;  
-   - The name `ub20fl01` itself specifies how the node should be created.  
-   This will create an Ubuntu 20 LTS 'large' node (the middle `l` )  
-   configured as a full development nodes (the middle `f`). The ending `01` is just a sequence number
-   to make the node names unique.  
-   &nbsp;  
-   - The second node `ub18ml01` will be created as an Ubuntu 18 LTS 'small' node (the middle `s` )
-   configured as a minimum development node (the middle `m`).
+   * `mpn` - (*Multipass Named Nodes*). A utility to create one or more nodes at the same time based on naming
+   convention of nodes. The [Node naming convention](#node-naming-convention)
+   controls both size and the cloud-init specification used.  
    &nbsp;
 
-The rest of this README will discuss all scrips and option more in detail.
+The relation between the scripts are shown in Figure 1
 
+```mermaid
+graph TD
+    A[mpn] -->|Calls| B(mkmpnode)
+    B --> |Calls| C(multipass launch)
+    B --> |Uses|D(Cloud Init files) 
+```
+***Figure 1:*** *Relation between scripts and the underlying `multipass`*
+
+The following basic examples show how nodes can be created once the `mptools` package have been
+installed.
+   
+1. `mpn ub22fl01` - Create a node based on Ubuntu 22 LTS with a full development
+    configuration (**f**) in a large (**l**) size node.  
+2. `mpn ub18bs01` - Create a node based on Ubuntu 18 LTS with a basic (**b**) node configuration (no development environment) in a small (**s**) node.  
+3. `mpn ub20ms01 ub20ms02` - Create two nodes, both based on Ubuntu 20 LTS, minimum development configuration (**m**) in a small (**s**) node.  
+4. `mkmpnode -m 1GB mynode` - Create a node with 1GB RAM, use the default cloud-config file and name it *mynode*.  
+5. `mkmpnode -m 2GB -d 10GB -c pg-config.yaml db-server` - Create a node named db-server with Posgresql database cloud-init config with 2GB RAM and 10GB disk.  
+     &nbsp;
+
+
+>**Note:** In the rest of this README it is assumed that the package have been installed and
+> that links to the scripts have been created in `/usr/local/bin` and is available in the `$PATH` variable.
 
 
 # Installing multipass
 | [back to content table](#content) |
 
-The first step is to install `multipass`. This can be done by using the first
-included script:
+The easiest way to install `multipass` is to use the provided script `mpinstall`.
+
+```text
+NAME
+   mpinstall.sh - Install multipass and adjust default driver
+USAGE
+   mpinstall.sh [-v] [-h] [-n]
+SYNOPSIS
+      -h        : Print help and exit
+      -n        : No execution. Only display actions.
+      -v        : Print version and exit
+```
+
+To install `multipass` call
 
 ```shell
-% ./mpinstall.sh
+% mpinstall
 ```
 
 This will install `multipass` on a macOS (both M1 and Intel). On Intel architecture it will also
-replace the default *hyperkit* virtualization with *qemu* since this driver will more allow
+replace the default *hyperkit* virtualization driver with *qemu* driver since this driver will more allow
 the modification of existing machine to, say, adjust the memory size. 
 
 In addition, the script will add 
 a number of aliases to the `~/.zshenv` file to make it easier to manage and start
-nodes. See the section *Aliases* for a detailed description. As a final step it will also
-add an environment variable to hold the current users public SSH key to make it possible
-to use SSH to log in to the created nodes as the environment variable `SSH_PUBLIC_KEY`.
+nodes. See the section [Aliases](#aliases) for a detailed description. 
 
 The script will automatically detect if `multipass` have already been installed, and 
 hence can be considered idempotent.
 
 
-# Creating customized nodes
+# Creating generic nodes
 | [back to content table](#content) |
 
-One of the scripts of the `mptool` package  is the script ample called `mkmpnode.sh` which can 
-be seen as a
-wrapper around the core `multipass launch` command to make creating and launching nodes with
-the help of pre-defined cloud init files easier by using a set of predefined cloud-init 
-template files.
+The one reason for this package existence is to make it easy to create nodes with
+cloud-init files. The main workhorse script to do so is `mkmpnode`.
 
 ```text
 NAME
-   mkmpnode.sh
+   mkmpnode - Create multipass nodes with a specified (or default) cloud-init file
 USAGE
-   mkmpnode.sh [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
+   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
-      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker]  (jammy)
-      -c FILE   : Cloud config file 
-      -m SIZE   : Memory size, defaults (500MB)
-      -d SIZE   : Disk size, defaults (5GB)
-      -p NUM    : Number of CPUs (2)
-      -M        : Mount ~/Devel inside node
+      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
+      -c FILE   : Cloud config file (${defaultCloudInit})
+      -m SIZE   : Memory size, defaults (${memory})
+      -d SIZE   : Disk size, defaults (${disk}GB)
+      -p NUM    : Number of CPUs (${cpus})
+      -M        : Mount ${HOME}/Devel inside node
+      -n        : No execution. Only display actions.
       -q        : Quiet  (no output to stdout)
       -v        : Print version and exit
       -h        : Print help and exit
 ```
 
+>**CAUTION:** Multipass does not allow a literal underscore in its node names!
+
 Most options should be self-explanatory but the `-M` deserves a comment. If the users
 home catalogue have a directory `~/Devel` it will be mounted automatically in the node directly
 under the default users (`ubuntu`) home directory.
 
-> **Note:** The dev nodes created with the supplied dev Cloud-Init templates will also have
-a directory `/var/jenkins_home` created in order for the nodes to be used as Jenkins agents.
-
+**Tip:** Use the `-n` flag to do a dryrun and see how the underlying call to `multipass` 
+is made wthout actually executing it.
 
 ## Cloud init files
-As mentioned in the previous section `mkmpnode.sh` uses cloud-init files to configure
+As mentioned in the previous section `mkmpnode` uses cloud-init files to configure
 the created nodes. Cloud init files are written as human-readable YAML files.
 
 > *It is out of the scope of this readme to fully describe he full syntax
@@ -153,8 +180,9 @@ the created nodes. Cloud init files are written as human-readable YAML files.
 > home of the cloud-init project [cloud-init.io](https://cloud-init.io/) 
 > and the description of [Cloud-Init files](https://cloudinit.readthedocs.io/en/latest/).*
 
-This toolset includes a few cloud-init templates, they are all stored in the `cloud/` folder.
-As of this writing the following templates are provided
+This toolset includes a few cloud-init templates, they are all stored in the `cloud/` folder
+in the distributed package.
+As of this writing the following templates are provided:
 
 1. `cloud/fulldev-config.in`, A full C/C++ dev environment
 2. `cloud/minidev-config.in`, A minimal c/C++ dev environment
@@ -162,77 +190,113 @@ As of this writing the following templates are provided
 4. `cloud/jenkins-config.in`, A basic Jenkins node
 5. `cloud/pg-config.in`, A basic Postgresql node
 
-In order to instantiate these templates to usable yaml-files it is assumed that 
-the environment variable `${SSH_PUBLIC_KEY}` exists and 
-contains the current users public ssh key. It can for example
-be added in `~/.zshenv` as
+These template cloud-init files will be used in the installation process to create
+customized versions based on the current user. The generated `*.yaml` files are
+stored in the user home directory under `~/.mptools`.
 
-```shell
-export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
-```
+This instantiation will be done as part of the `make install` target.
 
-> Note: If the `mpinstall.sh` install script have been used this has been automatically added
+## Manually trigger creation of cloud-init files
 
-In order to expand the provided templates to their corresponding  `*.yaml` yaml file a
-provided makefile exists. 
-To use this first move into the `mptools` directory. 
-Then, instantiate the cloud-init files as so:
+For experiments, it can be handy to re-generate the cloud-init file even after
+they have been initially created. 
 
-```shell
+Change back to the `mptools` package directory where the `Makefile` exists. 
+Then run the default makefile target as:
+
+```text
 %  make
+Transforming cloud/fulldev-config.in --> cloud/fulldev-config.yaml
+Transforming cloud/jenkins-config.in --> cloud/jenkins-config.yaml
+Transforming cloud/mini-config.in --> cloud/mini-config.yaml
+Transforming cloud/minidev-config.in --> cloud/minidev-config.yaml
+Transforming cloud/pg-config.in --> cloud/pg-config.yaml
+Transforming cloud/sq-config.in --> cloud/sq-config.yaml
 ```
 
-This will create all the `*.yaml` files from the corresponding `*.in` files . The
+This will add the generated `*.yaml` files (based on the current user) 
+together with the template files in `./cloud` directory. The
 created files will have the current users public SSH keys and user-name inserted.
 
-The installed SSH keys will make it easier for tools and "manual" access to the 
+Please note that only files where the template files has a newer modified timestamp than any existing `*.yaml` will be re-generated. To force all `*.yaml` files to be created
+regardless of timestamp first run `make clean`
+
+The installed SSH keys in the nodes will make it easier for tools and "manual" access to the 
 created nodes by simple ssh:ing into the nodes.
 
->**Note:** New cloud file templates can be easily added by, for example,
-> copying an existing file to a new name and making modifications. 
-> The makefile will automatically
-> pick up any new template files in the cloud directory and include them
-> when instantiating cloud-init YAML files.
+New cloud file templates can be easily added by, for example,
+copying an existing file to a new name and make modifications. 
+The makefile will automatically
+pick up any new template files in the cloud directory and include them
+when instantiating cloud-init YAML files.
+
+## Resolving location of cloud-init files
+| [back to content table ](#content)|
+
+Cloud init file is specified with the `-c` option. If no cloud file is specified
+in the call to `mkmpnode.sh` the default
+cloud-init file will be used, `minidev-config.yaml` . This cloud-init file installs 
+a minimal development environment in the node.
+
+If the cloud init file is specified with a path then that exact file and location
+will be used. If the file cannot be found this results in an error message.
+
+If, however only a filename without path is specified then `mkmpnode`
+will search for the config file in three locations in order of priority:
+
+1. The current working directory under the subdirectory `./cloud`
+2. From the subdirectory `cloud` in the same folder where the script is located.
+3. In the current users home directory under '~/.mptools'
+
+This priority order is used in roer to make it possible to experiment with new
+updated cloud-init files and have these be picked up by `mkmpnode` without having
+to "destroy" the original `*.yaml` files under `~/.mptools`.
+
+If the cloud-init file cannot be found in any of these places an error will be 
+written and the script will abort.
 
 
 ## Examples of creating custom nodes 
 | [back to content table ](#content)|
 
 We will start by illustrating how new nodes can be easily created with the help
-of the supplied `mkmpnode.sh` script and later on we will show how the same
-process can be simplified and automated with the supplied makefile by using a strict 
-schema on how ti name the nodes.
+of the supplied `mkmpnode` script and later on we will show how the same
+process can be further simplified and automated by using `mpn`
 
 To execute these examples it is assumed that the cloud-init YAML files have been 
-instantiated with a call to `make`.
+instantiated either by being installed (`make install`) or being instantiated as
+described above (with a call to the default `make` target).
 
 First we are going to create a node with a  custom name and more memory than default 
 
 ```shell
-% ./mkmpnode.sh -m 1GB mynode
+% mkmpnode -m 1GB mynode
 ```
 
 This will create (and start) a new node with 1GB memory named "mynode" and initialized 
 by the default cloud-init configuration which is set to `minidev-config.yaml` in the script.
 
-By default, the created nodes will be based on the latest Ubuntu image (i.e. Ubuntu 22 a.k.a. "jammy"
-at the time of writing)
-but if we instead wanted to create an even larger node, based on Ubuntu18 with a full development 
+By default, the created nodes will be based on the latest Ubuntu image (i.e. Ubuntu 22 LTS a.k.a. "jammy"
+at the time of writing).
+
+If we instead wanted to create a larger node, based on Ubuntu 18 LTS with a full development 
 configuration we would instead need to call
 
 ```shell
-% ./mkmpnode.sh -r bionic -m 4GB -c cloud/fulldev-config.yaml -d 10GB mynode
+% mkmpnode -r bionic -m 4GB -c fulldev-config.yaml -d 10GB mynode
 ```
 
 This will create a node with 4GB RAM and a 10GB disk based on Ubuntu 18 (i.e. "bionic")
 
 ### Setting up a Postgresql DB-server
-One of the cloud-init files allow for easy setup of a postgresql server.
-This server needs to be created by the `mkmpnode.sh` script since the node naming convention
-has no concept of a DB server.
 
-The cloud init file will set up a basic postgres server with some password as specified in the
-cloud init file os it is most definitely only for experiments and tests. See table below.
+One of the cloud-init files allow for easy setup of a postgresql server.
+This server needs to be created manually with the help of the `mkmpnode` script since the 
+node naming convention (used by `mpn`) has no concept of a DB server.
+
+The cloud init file will set up a basic postgres server with the password specified in the
+cloud init file. *THIS IS HIGHLY INSECURE AND IS ONLY MEANT FOR TESTING AND EXPERIMENTS!*.
+See table below for the actual values.
 
 
 | User/DB Owner | Password | DB        |
@@ -241,10 +305,10 @@ cloud init file os it is most definitely only for experiments and tests. See tab
 | ubuntu        | ubuntu   | ubuntu_db |
 Table: Default roles/users created by pg-config.in
 
-To create a Postgresql server (assuming the cloud yaml file have previously been instantiated with a call to `% make` ) where we assume we need 2GB of RAM we would call
+To create a Postgresql server (assuming the cloud yaml file have previously been instantiated) where we assume we need 2GB of RAM we could for example call
 
 ```shell
- % ./mkmpnode.sh -c cloud/pg-config.yaml -m 2GB db-server
+ % mkmpnode -c pg-config.yaml -m 2GB db-server
 ```
 
 The default postresql cloud file will set up the access permission to the server
@@ -253,21 +317,41 @@ and also create a new user "ubuntu" with default password "ubuntu" and a new DB 
 The TCP/IP access restriction is set to `"samenet"` any access must be from the same 
 subnetwork that we are currently on (e.g. from another MP node or from the host).
 
-
-# Creating nodes using make
+# Creating nodes using naming conventions
 | [back to content table ](#content)|
 
-The previous section showed how nodes could be manually created by giving a few
-parameters to the `mkmpnode.sh` script. However, there is an easier way. By using the
-supplied makefile it is possible to create nodes without giving all the parameters
-but instead just give the node a very specific name.
+In the section above we showed how to create nodes "manually" calling the makefile
+directly. To further simplify this a small wrapper script `mpn.sh`
+("**M**ultipass-**N**ode") exists.
 
-> There is also a wrapper script `mpn.sh` described in the next section that slightly 
-> simplifies the calling to `make`
+```text
+NAME
+   mpn - Create multipass node by naming convention
+USAGE
+   mpn [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
+SYNOPSIS
+      -h        : Print help and exit
+      -n        : No execution. Only display actions.
+      -s        : Silent
+      -v        : Print version and exit
 
-This is based on a simple node naming schema where the node name itself
-specify what base image and what cloud init configuration and 
-machine size should be used as explained below.
+The node name will control the size and capacity of the node.
+     ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
+* MAJOR_RELEASE=[18|20|22]
+* CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
+* SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous]
+* NODE_NUMBER=[0-9]{2}
+```
+
+To create nodes one simply specifies one or more nodes using the previous discussed naming
+format as arguments as so:
+
+```shell
+% mpn ub18fs01 ub20ml01 ub22fl01
+```
+
+The wrapper script makes use of make's parallel options and will cut down the time to create multiple
+nodes by starting up to four parallel node creations.
 
 ## Node naming convention 
 | [back to content table ](#content)|
@@ -304,12 +388,25 @@ Some examples of valid names are:
 - ub18fm01 - A Ubuntu 18 image, full development setup, medium machine size
 - ub22mx12 - A Ubuntu 22 image, minimal development setup, x-large machine size
 
-In the following section we will show ho to practically use this naming convention with
-the supplied makefile.
-
 >***Note:***   
 > *All nodes will have 2 CPUs. If more CPUSs are needed then the nodes must be
 created with the `mkmpnode.sh` directly using the `-p` option.*
+
+
+# Creating nodes using make
+| [back to content table ](#content)|
+
+The previous section showed how nodes could be manually created by giving a few
+parameters to the `mkmpnode.sh` script. However, there is an easier way. By using the
+supplied makefile it is possible to create nodes without giving all the parameters
+but instead just give the node a very specific name.
+
+> There is also a wrapper script `mpn.sh` described in the next section that slightly
+> simplifies the calling to `make`
+
+This is based on a simple node naming schema where the node name itself
+specify what base image and what cloud init configuration and
+machine size should be used as explained below.
 
 ## Examples of using the Makefile directly
 | [back to content table ](#content)|
@@ -377,46 +474,20 @@ Again, use `-j` to build nodes in parallel.
 It should now be obvious how to create custom nodes using the node-naming method
 together with the makefile.
 
-## All makefile targets
+## Makefile targets
 | [back to content table ](#content)|
 
-- **all** - The default target that will instantiate all `*.yaml` files from the 
-corresponding `*.in` templates.
-- **node** - Create the nodes specified by the `$(NODES)` makefile variable 
-(which can as usual be overridden on the command line)
-- **clean** - Delete all generated files
-- **distclean** - In addition to **clean** also remove any created distribution tar-ball. 
-Restores the `mptools` directory as distributed and should be called before a release
-is built.
-- **dist** - Create a distribution tar ball
+| Target        | Purpose                                                                                              |
+|---------------|------------------------------------------------------------------------------------------------------|
+| **all**       | The default target that will instantiate all `*.yaml` files from the corresponding `*.in` templates. |
+| **node**      | Create the nodes specified by the `$(NODES)` makefile variable                                       |
+| **clean**     | Delete all generated files                                                                           |
+| **distclean** | In addition to **clean** also remove any created distribution tar-ball.                              |
+| **dist**      | Create a distribution tar ball                                                                       |
+| **install**   | Install the package (by default `/usr/loca` is used as prefix)                                       |
+| **uninstall** | Uninstall the package                                                                                | 
+| **_dbg**      | Print all Makefile variables                                                                         |
 
-# Using wrapper script to create nodes
-| [back to content table ](#content)|
-
-In the section above we showed how to create nodes "manually" calling the makefile
-directly. To further simplify this a small wrapper script `mpn.sh`
-("**M**ultipass-**N**ode") exists. 
-
-```text
-NAME
-   mpn.sh
-USAGE
-   mpn.sh [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
-SYNOPSIS
-      -h        : Print help and exit
-      -s        : Silent
-      -v        : Print version and exit
-```
-
-To create nodes one simply specifies one or more nodes using the previous discussed naming
-format as arguments as so:
-
-```shell
-% ./mpn.sh ub18fs01 ub20ml01 ub22fl01
-```
-
-The wrapper script makes use of make's parallel options and will cut down the time to create multiple
-nodes by starting up to four parallel node creations.
 
 # Aliases
 | [back to content table ](#content)|
