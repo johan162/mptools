@@ -362,10 +362,10 @@ SYNOPSIS
 
 The node name will control the size and capacity of the node.
      ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
-* MAJOR_RELEASE=[18|20|22]
-* CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
-* SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous]
-* NODE_NUMBER=[0-9]{2}
+ - MAJOR_RELEASE=[18|20|22]
+ - CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
+ - SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous]
+ - NODE_NUMBER=[0-9]{2}
 ```
 
 To create nodes one simply specifies one or more nodes using the previous discussed naming
@@ -375,8 +375,8 @@ format as arguments as so:
 % mpn ub18fs01 ub20ml01 ub22fl01
 ```
 
-The wrapper script makes use of make's parallel options and will cut down the time to create multiple
-nodes by starting up to four parallel node creations.
+When creating multiple new nodes the script will kick of up to four parallel  node
+creations. This greatly reduces the total build/creation time.
 
 ## Node naming convention 
 | [back to content table ](#content)|
@@ -421,7 +421,7 @@ created with the `mkmpnode.sh` directly using the `-p` option.*
 # Creating nodes using make
 | [back to content table ](#content)|
 
->**Note:** This is only documented in oder ot explain some
+>**Note:** This is only documented in order ot explain some
 > "advanced" concept in the makefile, mostly for historic reasons
 > and for those interested in novel usage of makefiles.
 > It is recommended to use the `mpn` script instead
