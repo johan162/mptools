@@ -67,8 +67,9 @@ The naming convention used is thoroughly documented below in section [Node namin
 ## Changing install location
 | [back to content table](#content) |
 
-By default the scripts will ned installed 
-with the prefix `/usr/local` so that the package will be installed under `/usr/local/share` 
+By default, the scripts will be installed using
+the prefix `/usr/local` for the installation directory. 
+This means that the package will be installed under `/usr/local/share` 
 and the binaries will be linked in `/usr/local/bin`.
 
 This can be changed by adjusting the `INSTALL_PREFIX`
