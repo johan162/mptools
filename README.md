@@ -1,15 +1,35 @@
-# mptools
+# Introduction - mptools
 
-A set of utility programs for macOS to both help with installation of `multipass` 
-(with adaptations) and create `multipass` 
-nodes initialized with the help of cloud-init config files. These scripts allow for several
-levels of usage depending on needs.
+`mptools` Is a utility package for macOS to both help with installation of `multipass` 
+(with adaptations) but is primarily a help to create `multipass` 
+nodes initialized with the help of (automatically customized) cloud-init config files. 
+These scripts allow for several
+levels of customization/usage depending on needs.
 
 In its simplest form (after installing) nodes can be created using a naming convention
 that specifies how to initialize the node as well as (some of) the specification for
 the virtual machine such as RAM and disk.
 
-The naming convention used is thoroughly documented below in section [Node naming convention](#node-naming-convention).
+After installing, nodes can be created as the following basic example show. 
+The example below will use two ways to create identical node instances, 
+the hard- and the easy-way.
+
+First lets do it the hard (and most flexible) way
+
+```shell
+% mkmpnode -c fulldev-config.yaml -m 2GB -d 10GB -r bionic ub18fl01
+```
+
+then, the exact same node can also be created more easily 
+using the node naming conventions as
+
+```shell
+% mpn ub18fl01 
+```
+All details as well as the naming convention used is documented below, see
+[Node naming convention](#node-naming-convention) for the naming specification.
+
+
 
 # Content
 - [Installing the package](#installing-the-package)
@@ -27,39 +47,52 @@ The naming convention used is thoroughly documented below in section [Node namin
     - [Makefile targets](#makefile-targets)
 - [Aliases](#aliases)
 - [Tips and Tricks](#tips-and-tricks)
+- [ToDo](#todo)
 
 
 
 # Installing the package
 
->**Note:** *It is recommended to download an official release tag as there is no guarantee that the latest `main` branch is ready for deployment.*
+>**Note:** *It is recommended to download an official released tagged version 
+> as there is no guarantee that the latest `main` branch is ready for deployment 
+> (it could be work in progress!)*
 
 1. Download, unpack and install the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
     ```shell
+    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.0/mptools-2.0.0.tar.gz
     % tar xzf mptools-2.0.0.tar.gz
     % cd mptools-2.0.0
     % make install
     ```
-   This will install the programs under `/usr/local/bin` so you either have to restart
-   the terminal or call `rehash` to update the shell auto-completion hash.  
+    
+    **Note:** If `curl` is not installed `wget` could be used to download the package as so
+    ```shell
+    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.0.0/mptools-2.0.0.tar.gz
+    ```
+
+   The `make install` will install the scripts under `/usr/local/bin` . The get the
+   shell autocompletion updated either the terminal have to restarted
+   or call `rehash` to update the shell auto-completion hash.  
    &nbsp;  
-   In addition to installing the scripts it will also create a hidden directory 
+   In addition to installing the scripts the install target will also create a hidden directory 
    in the current users home directory at `~/.mptools`. In that directory a number 
    of customized cloud-init files will be stored. These are customized with the
    current users public SSH key as well as also setting up user account with the
    same name as the current user in the created nodes.    
    &nbsp;  
-   This setup will then make it simple to ssh into the node as `% ssh 192.168.64.12` (assuming this is the nodes IPv4 address.)  
+   This setup will then make it simple to ssh into the node for example as 
+   `% ssh 192.168.yy.xx` (where the IPv4 address is assigned to the node)  
    &nbsp;  
-2. If multipass is not installed then do this with the utility program provided
+2. If `multipass` (see [https://multipass.run/](https://multipass.run/)) is not installed 
+   then this is most easily done with the utility program provided
     ```shell
     % mpinstall
     ```
-    **Note:** This requires [homebrew](https://brew.sh/) to be installed and a 
-    warning will be given if not.  
+    **Note:** This requires [homebrew](https://brew.sh/) to be installed and an 
+    error will be given if it is not installed.  
    &nbsp;
 
->**Tip:** *The script can also be run directly from the downloaded package directory (e.g. mptools-2.0.0). 
+>**Tip:** *The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.0.0). 
 > The one thing to remember is that the script files are named with the `*.sh` suffix. When the
 > package is installed the symlink is the basename of the script without this suffix
 > to make it slightly easier to call the script.*
@@ -593,6 +626,14 @@ or
 `brew uninstall --zap multipass`  
 &nbsp;  
 * Find available images `mp find`
+
+# ToDo
+
+- Make a homebrew package with automatic installation
+- Separate the README into a proper README and then the full documentation
+- Update the mptools presentation for v2.x installation method
+
+
 
 
 
