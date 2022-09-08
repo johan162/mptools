@@ -66,7 +66,7 @@ SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.0.0
+DIST_VERSION := 2.0.1-dev
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 
@@ -150,7 +150,7 @@ install: all
 	if [[ ! -d $(INSTALL_BIN_DIR) ]]; then mkdir -p $(INSTALL_BIN_DIR); fi
 	cp $(CLOUD_TEMPLATE_FILES) $(INSTALL_CLOUDINIT_DIR)
 	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
-	mkdir $(INSTALL_USERCLOUDINIT_DIR)
+	if [[ ! -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_USERCLOUDINIT_DIR); fi
 	cp $(CLOUDINIT_FILES) $(INSTALL_USERCLOUDINIT_DIR)
 	chmod +x $(INSTALL_DIR)/*.sh
 	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BIN_DIR)/$${files%.sh}; done
@@ -166,7 +166,7 @@ install: all
 # already installed. For that reason we find the installed version by backtracking
 # the link from the installed binaries to figure out the previous installed version.
 uninstall:
-	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]]; then           \
+	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]] || [[ -h $(INSTALL_BIN_DIR)/mkinstall ]]; then           \
       echo "================================================================" ;                 \
       INSTALLED_DIR=$$(dirname $$(readlink $(INSTALL_BIN_DIR)/mkmpnode));                       \
 	  echo "Uninstall successful, removed: " ;                                                  \
@@ -178,8 +178,26 @@ uninstall:
 	  for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BIN_DIR)/$${files%.sh}; done;            \
 	  echo "================================================================" ;                 \
 	else                                                                                        \
-	  echo "mptools not installed. Nothing to remove.";                                         \
-	fi
+	  if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]] || [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then  \
+		echo "Broken installation, missing installed script. Trying to clean up";               \
+		echo "Found:";                                                                          \
+		if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then echo " - "$(INSTALL_USERCLOUDINIT_DIR); fi;   \
+		if [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then                        \
+		    echo " - "$(INSTALL_PREFIX)/share/$$(ls $(INSTALL_PREFIX)/share | grep "^mptools-");\
+        fi;                                                                                     \
+		read -p "Continue to clean up these files (Y/N)?" -n 1 -r ;                                         \
+		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then                                                     \
+		    echo "\nAborting." ;                                                                \
+		else                                                                                    \
+     	    rm -rf $(INSTALL_USERCLOUDINIT_DIR);                                                \
+		    rm -rf $(INSTALL_PREFIX)/share/$(PKG_NAME)-*;                                       \
+		    echo "" ;                                                                           \
+		    echo "Done cleaning up. Installation removed" ;                                     \
+		fi                                                                                      \
+	  else                                                                                      \
+        echo "Package not installed. Nothing to do.";                                           \
+	  fi                                                                                        \
+  	fi
 
 # Used to help debug makefile
 _dbg:
