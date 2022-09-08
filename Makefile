@@ -66,7 +66,7 @@ SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.0.1-dev
+DIST_VERSION := 2.0.1
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 
@@ -178,14 +178,14 @@ uninstall:
 	  for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BIN_DIR)/$${files%.sh}; done;            \
 	  echo "================================================================" ;                 \
 	else                                                                                        \
-	  if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]] || [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then  \
+	  if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]] || [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then \
 		echo "Broken installation, missing installed script. Trying to clean up";               \
 		echo "Found:";                                                                          \
-		if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then echo " - "$(INSTALL_USERCLOUDINIT_DIR); fi;   \
+		if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then echo " - "$(INSTALL_USERCLOUDINIT_DIR); fi; \
 		if [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then                        \
 		    echo " - "$(INSTALL_PREFIX)/share/$$(ls $(INSTALL_PREFIX)/share | grep "^mptools-");\
         fi;                                                                                     \
-		read -p "Continue to clean up these files (Y/N)?" -n 1 -r ;                                         \
+		read -p "Continue to clean up these files (Y/N)?" -n 1 -r ;                             \
 		if [[ ! $$REPLY =~ ^[Yy]$$ ]]; then                                                     \
 		    echo "\nAborting." ;                                                                \
 		else                                                                                    \
