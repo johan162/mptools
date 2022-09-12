@@ -1,42 +1,81 @@
 #!/usr/bin/env bash
-# mkmpnode.sh
-# Setup a multipass node
-#
-# Written by: Johan Persson <johan162@gmail.com>
-# All tools released under MIT License. See LICENSE file
-# ==========================================================================
+## \file
+## \brief mkmpnode - Create multipass nodes with a specified (or default) cloud-init file
+## \details
+## ```
+## NAME
+##   mkmpnode
+## USAGE
+##   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
+## SYNOPSIS
+##      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
+##      -c FILE   : Cloud config file (${defaultCloudInit})
+##      -m SIZE   : Memory size, defaults (500MB)
+##      -d SIZE   : Disk size, defaults (5GB)
+##      -p NUM    : Number of CPUs (2)
+##      -M        : Mount ${HOME}/Devel inside node
+##      -n        : No execution. Only display actions.
+##      -q        : Quiet  (no output to stdout)
+##      -v        : Print version and exit
+##      -h        : Print help and exit
+## ```
+## \author Johan Persson <johan162@gmail.com>
+## \copyright MIT License. See LICENSE file.
 
 # Detect in some common error conditions.
 set -o nounset
 set -o pipefail
 
+## @brief Which base image to use. Can be overridden by ned user.
 declare ubuntuVer=jammy
+
+## @brief Node name. Specified by user
 declare nodeName=
+
+## @brief Node memory size.
 declare memory="500M"
+
+## @brief Node disk size.
 declare disk="5G"
+
+## @brief Number of virtual CPUs available for node
 declare -i cpus=2
+
+## @brief Determine if we should mount `~/Devel` in the users home directory in the node
 declare mountDev=0
+
+## @brief Valid options for ubuntuVer
 declare vlist=("bionic" "focal" "impish" "jammy" "docker")
+
+## @brief Flag for doing a dryrun
 declare -i noexecute=0
+
+## @brief Which cloud-init file to use
 declare cloudInit=""
+
+## @brief Default cloud-init file if none specified by user
 declare defaultCloudInit="minidev-config.yaml"
 
 # Don't edit below this line
 # --------------------------
+
+## @brief Suppress output
 declare -i quiet_flag=0
 
-# Print error messages in red
-red="\033[31m"
-default="\033[39m"
+## @brief Terminal color for error messages
+declare red="\033[31m"
 
-# Format error message
+## @brief Restore default terminal color
+declare default="\033[39m"
+
+## @brief Format error message
 errlog() {
     printf "$red*** ERROR *** "
     printf "$@"
     printf "$default\n"
 }
 
-# Format info message
+## @brief Format info message
 infolog() {
     [[ ${quiet_flag} -eq 0 ]] && printf "$@"
 }
@@ -47,7 +86,7 @@ infolog() {
 #    exit 1
 #fi
 
-# Get version from the one true source - the makefile
+## @brief Get version from the one true source - the Makefile
 printversion() {
     declare vers
     if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
@@ -60,8 +99,9 @@ printversion() {
     infolog "${name} ${vers}\n"
 }
 
-# arg1 word to find
-# arg2 list to check from. Should be passed as "${list[@]}"
+## @brief Utility function to verify that a value exists in a list
+## @param arg1 word to find
+## @param arg2 list to check from. Should be passed as "${list[@]}"
 exist_in_list() {
     local found=0
     local find="$1"
@@ -76,7 +116,8 @@ exist_in_list() {
     return $found
 }
 
-# Print usage
+## @brief Print usage
+## @param `$0`  Script name
 usage() {
     declare name
     name=$(basename "$0")

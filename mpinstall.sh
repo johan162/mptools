@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-#
-# Install multipass and set up some useful aliases
-#
-# Written by: Johan Persson <johan162@gmail.com>
-# All tools released under MIT License. See LICENSE file.
-# ==========================================================================
+## \file
+## \brief mpinstall.sh - Install `multipass` and set up some useful aliases
+##
+## \author Johan Persson <johan162@gmail.com>
+## \copyright MIT License. See LICENSE file.
 
 # Detect in some common error conditions.
 set -o nounset

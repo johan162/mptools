@@ -1,43 +1,128 @@
 #!/usr/bin/env bash
-# mpn.sh
-# Create one or more multipass nodes based on the node naming convention
-#
-# Written by: Johan Persson <johan162@gmail.com>
-# All tools released under MIT License. See LICENSE file.
-# ==============================================================================================
+## \file
+## \brief mpn.sh - Setup nodes using naming convention
+## \details
+## ```
+## NAME
+##    mpn - Create multipass node by naming convention
+## USAGE
+##    mpn [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
+## SYNOPSIS
+##       -h        : Print help and exit
+##       -n        : No execution. Only display actions.
+##       -s        : Silent
+##       -v        : Print version and exit
+## ```
+## \author Johan Persson <johan162@gmail.com>
+## \copyright MIT License. See LICENSE file.
 
 # Detect in some common error conditions.
 set -o nounset
 set -o pipefail
 
-# Cache result ito temp file since it is a slow operation
+## \brief Cache result to temp file during one runt of the script since `multipass list` it is a slow operation
 declare nodecachefile=$(mktemp /tmp/mplist.XXXXXXXXXXXXX)
 multipass list >$nodecachefile
 
-# Exit handler
+## \brief Default installation path
+declare INSTALL_PREFIX="/usr/local"
+
+## \brief Default installation path for executables
+declare INSTALL_BIN_DIR="${INSTALL_PREFIX}/bin"
+
+## \brief Name of the `mkmpnode` script we call
+declare MKMPNODE_SCRIPT="./mkmpnode.sh"
+
+## \brief Directory where to find the user specific `*.yaml` files
+declare INSTALL_USERCLOUDINIT_DIR=${HOME}/.mptools
+
+## \brief This will hold the name of the directory from where this script is executed
+declare SCRIPT_DIR=""
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+## \brief Suppress output
+declare -i quiet_flag=0
+
+## \brief String of nodes names to create
+declare nodes=""
+
+## \brief The string of nodes converted to a list
+declare nodeList=("")
+
+## \brief Flag for dryrun
+declare -i noexec=0
+
+## @brief Terminal color for error messages
+declare red="\033[31m"
+
+## @brief Restore default terminal color
+declare default="\033[39m"
+
+# Predefined cloud configs based on the infix in the node name
+
+## \brief Cloud file for full development environment
+declare CLOUD_CONFIG_F="fulldev-config.yaml"
+
+## \brief Cloud file for minimal node config
+declare CLOUD_CONFIG_B="mini-config.yaml"
+
+## \brief Cloud file for minimal development environment
+declare CLOUD_CONFIG_M="minidev-config.yaml"
+
+# Predefined sizes based on the infix in the node name
+
+## \brief Size configuration for a small node
+declare MACHINE_CONFIG_S="-m 500MB -d 5GB"
+
+## \brief Size configuration for a medium node
+declare MACHINE_CONFIG_M="-m 1GB -d 5GB"
+
+## \brief Size configuration for an expanded node
+declare MACHINE_CONFIG_E="-m 3GB -d 5GB"
+
+## \brief Size configuration for a large node
+declare MACHINE_CONFIG_L="-m 2GB -d 10GB"
+
+## \brief Size configuration for a x-large node
+declare MACHINE_CONFIG_X="-m 4GB -d 15GB"
+
+## \brief Size configuration for a humongous node
+declare MACHINE_CONFIG_H="-m 8GB -d 20GB"
+
+# Predefined image names corresponding to the major Ubuntu releases as specified in the node name
+## \brief Image to use for a `22` node
+declare IMAGE_UB22=jammy
+
+## \brief Image to use for a `20` node
+declare IMAGE_UB20=focal
+
+## \brief Image to use for `18` node
+declare IMAGE_UB18=bionic
+
+## \brief Exit handler
 function cleanup {
     rm -f "$nodecachefile"
 }
 
 trap cleanup EXIT
 
-# Print error messages in red
-red="\033[31m"
-default="\033[39m"
-
-# Format error message
+## \brief Format error message
+## \param `$*` Error string to display
 errlog() {
     printf "$red*** ERROR *** "
     printf "$@"
     printf "$default\n"
 }
 
-# Format info message
+
+## \brief Format info message
+## \param `$*` Info string to display
 infolog() {
     [[ ${quiet_flag} -eq 0 ]] && printf "$@"
 }
 
-# Get version from the one true source - the makefile
+
+## \brief Get version from the one true source - the makefile
 printversion() {
     declare vers
     if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
@@ -50,8 +135,10 @@ printversion() {
     infolog "${name} ${vers}\n"
 }
 
-# arg1 word to find
-# arg2 list to check from. Should be passed as "${list[@]}"
+
+## \brief Utility function to verify that a value exists in a list
+## \param arg1 word to find
+## \param arg2 list to check from. Should be passed as "`${list[@]}`"
 exist_in_list() {
     local -i found=0
     local find="$1"
@@ -66,6 +153,9 @@ exist_in_list() {
     return $found
 }
 
+
+## \brief Print usage
+## \param `$0`  Script name
 usage() {
     declare name=$(basename $0)
     cat <<EOT
@@ -88,13 +178,6 @@ NODE_NUMBER=[0-9]{2}
 EOT
 }
 
-declare INSTALL_PREFIX="/usr/local"
-declare INSTALL_BIN_DIR="${INSTALL_PREFIX}/bin"
-declare MKMPNODE_SCRIPT="./mkmpnode.sh"
-declare INSTALL_USERCLOUDINIT_DIR=${HOME}/.mptools
-
-declare SCRIPT_DIR=""
-SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 # Find out where mkmpnode.sh is
 if [[ ! -f ${MKMPNODE_SCRIPT} ]]; then
@@ -120,29 +203,6 @@ if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
         fi
     fi
 fi
-
-declare -i quiet_flag=0
-declare nodes=""
-declare nodeList=("")
-declare -i noexec=0
-
-# Predefined cloud configs based on the infix in the node name
-declare CLOUD_CONFIG_F="fulldev-config.yaml"
-declare CLOUD_CONFIG_B="mini-config.yaml"
-declare CLOUD_CONFIG_M="minidev-config.yaml"
-
-# Predefined sizes based on the infix in the node name
-declare MACHINE_CONFIG_S="-m 500MB -d 5GB"
-declare MACHINE_CONFIG_M="-m 1GB -d 5GB"
-declare MACHINE_CONFIG_E="-m 3GB -d 5GB"
-declare MACHINE_CONFIG_L="-m 2GB -d 10GB"
-declare MACHINE_CONFIG_X="-m 4GB -d 15GB"
-declare MACHINE_CONFIG_H="-m 8GB -d 20GB"
-
-# Predefined image names corresponding to the major Ubuntu releases as specified in the node name
-declare IMAGE_UB22=jammy
-declare IMAGE_UB20=focal
-declare IMAGE_UB18=bionic
 
 while [[ $OPTIND -le "$#" ]]; do
     if getopts svhn o; then
