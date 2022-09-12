@@ -1,4 +1,4 @@
-# Installing the package
+# Installing mptools
 
 It is recommended to download an official release (or use a tagged version in the repo)
 as there is no guarantee that the latest `main` branch is ready for deployment
