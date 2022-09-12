@@ -1,5 +1,6 @@
 # Build documentation with the help of doxygen
 DOC_FILES := $(wildcard *.md)
+SCRIPT_FILES := $(wildcard ../*.sh)
 OUT_DIR := out
 MAKE := /usr/bin/make
 
@@ -13,7 +14,7 @@ out:
 	mkdir -p out/html
 	mkdir -p out/latex
 
-$(OUT_DIR)/latex/refman.tex $(OUT_DIR)/html/index.html: Doxyfile $(DOC_FILES) | out
+$(OUT_DIR)/latex/refman.tex $(OUT_DIR)/html/index.html: Doxyfile $(DOC_FILES) $(SCRIPT_FILES) | out
 	doxygen
 
 $(OUT_DIR)/latex/refman.pdf: $(OUT_DIR)/latex/refman.tex
