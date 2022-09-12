@@ -1,34 +1,9 @@
 # ==============================================================================================
-# Makefile to easily create customized user specific cloud init file
+# \file
+# \brief Makefile to easily create customized user specific cloud init file
 #
-# Note is it assumed you have defined an environment variable SSH_PUBLIC_KEY
-# set to your public key.
-#
-# This could for example be in .zshenv (or.bash_profile) as:
-#      export SSH_PUBLIC_KEY=$(cat ${HOME}/.ssh/id_rsa.pub)
-#
-# Supported targets:
-#
-# (default) all     Create proper Cloud Config Files from the *.in  templates by
-#                   expanding all environment variables.
-#
-# node	            Create and start all predefined nodes named in $(NODES)
-#                   i.e. ub22n01 ub20n01 ub18n01
-#
-# clean	            Delete created YAML-files
-#
-# distclean         clean + remove created tar-ball restores the cloned repo
-#
-# dist              Create distribution tar ball
-#
-# node naming convention:  "ub<UBUNTU VERSION><CLOUD CONFIG><MACHINE SIZE><NODE NUMBER>"
-#
-# By using the naming convention nodes can for example be created as so:
-#
-#     make NODES="ub22fl01 ub22fl02 ub22fl03" node
-#
-# Written by: Johan Persson <johan162@gmail.com>
-# All tools released under MIT License. See LICENSE file.
+# \author Johan Persson <johan162@gmail.com>
+# \copyright All tools released under MIT License. See LICENSE file.
 # ==============================================================================================
 
 # Uncomment to run the makefile silent
@@ -66,7 +41,7 @@ SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.0.1
+DIST_VERSION := 2.0.2
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 
@@ -127,6 +102,7 @@ $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
 
 clean:
 	rm -rf $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
+	$(MAKE) -C docs clean
 
 distclean: clean
 	rm -rf $(PKG_NAME)-[1-9].[1-9]*
@@ -166,7 +142,7 @@ install: all
 # already installed. For that reason we find the installed version by backtracking
 # the link from the installed binaries to figure out the previous installed version.
 uninstall:
-	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]] || [[ -h $(INSTALL_BIN_DIR)/mkinstall ]]; then           \
+	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]] || [[ -h $(INSTALL_BIN_DIR)/mkinstall ]]; then \
       echo "================================================================" ;                 \
       INSTALLED_DIR=$$(dirname $$(readlink $(INSTALL_BIN_DIR)/mkmpnode));                       \
 	  echo "Uninstall successful, removed: " ;                                                  \
@@ -219,5 +195,7 @@ _dbg:
 	@echo INSTALL_BIN_DIR=$(INSTALL_BIN_DIR)
 	@echo INSTALL_USERCLOUDINIT_DIR=$(INSTALL_USERCLOUDINIT_DIR)
 
+docs:
+	$(MAKE) -C docs
 
-.PHONY: all clean nodes dist distclean install uninstall $(NODES)
+.PHONY: all clean node dist distclean install uninstall docs $(NODES)
