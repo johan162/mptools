@@ -44,6 +44,7 @@ PKG_NAME := mptools
 DIST_VERSION := 2.0.2
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
+DIST_DOCDIR := $(DIST_DIR)/docs
 
 MAKEFILE_DIR := $$(dirname $(firstword $(MAKEFILE_LIST)))
 
@@ -65,7 +66,11 @@ SCRIPT_FILES := $(wildcard *.sh)
 SCRIPT_BINFILES := $(patsubst %.sh,%,$(SCRIPT_FILES))
 
 # Documentation
-DOC_FILES := LICENSE $(wildcard *.md)
+LICENSE_FILE := LICENSE
+DOC_SRC_HTML_DIR := docs/out/html
+DOC_DST_HTML_DIR := $(DIST_DOCDIR)/mptools_userguide_html
+DOC_SRC_PDF_FILE := docs/out/latex/refman.pdf
+DOC_DST_PDF_FILE := $(DIST_DOCDIR)/mptools_userguide.pdf
 
 # ================================================================================================
 # Rule and recipe sections
@@ -110,8 +115,11 @@ distclean: clean
 $(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_TEMPLATE_FILES) $(DOC_FILES)
 	rm -rf $(DIST_DIR)
 	mkdir -p $(DIST_CLOUDDIR)
-	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(DIST_DIR)
+	mkdir -p $(DIST_DOCDIR)
+	cp Makefile $(LICENSE_FILE) $(SCRIPT_FILES) $(DIST_DIR)
 	cp $(CLOUD_TEMPLATE_FILES) $(DIST_CLOUDDIR)
+	cp -r $(DOC_SRC_HTML_DIR) $(DOC_DST_HTML_DIR)
+	cp $(DOC_SRC_PDF_FILE) $(DOC_DST_PDF_FILE)
 	tar zcf $(DIST_DIR).tar.gz $(DIST_DIR)
 	@echo "======================================================"
 	@echo "Created:  $(DIST_DIR).tar.gz"
