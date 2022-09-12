@@ -67,7 +67,16 @@ SYNOPSIS
 
 ## Documentation
 
-Full documentation can be found in the `./docs` directory in both HTML and PDF format.
+Full documentation can be found in the `./docs` directory in the distributed tar-ball 
+both HTML and PDF format as
+
+1. (HTML) `./docs/mptools_userguide_html/index.html`
+2. (PDF) `./docs/mptools_userguide.pdf`
+
+The documentation is also available directly online in github as
+
+1. (HTML)  [mptools User guide](https://johan162.github.io/mptools/html/index.html)  
+2. (PDF)   [mptools User guide](https://johan162.github.io/mptools/mptools_manual.pdf)
 
 
 
