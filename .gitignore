@@ -2,4 +2,6 @@
 *.yaml
 *.gz
 *.tgz
+docs/out
+mptools-*
 
