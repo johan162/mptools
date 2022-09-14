@@ -61,43 +61,43 @@ declare default="\033[39m"
 # Predefined cloud configs based on the infix in the node name
 
 ## \brief Cloud file for full development environment
-declare CLOUD_CONFIG_F="fulldev-config.yaml"
+declare -r CLOUD_CONFIG_F="fulldev-config.yaml"
 
 ## \brief Cloud file for minimal node config
-declare CLOUD_CONFIG_B="mini-config.yaml"
+declare -r CLOUD_CONFIG_B="mini-config.yaml"
 
 ## \brief Cloud file for minimal development environment
-declare CLOUD_CONFIG_M="minidev-config.yaml"
+declare -r CLOUD_CONFIG_M="minidev-config.yaml"
 
 # Predefined sizes based on the infix in the node name
 
 ## \brief Size configuration for a small node
-declare MACHINE_CONFIG_S="-m 500MB -d 5GB"
+declare -r MACHINE_CONFIG_S="-m 500MB -d 5GB"
 
 ## \brief Size configuration for a medium node
-declare MACHINE_CONFIG_M="-m 1GB -d 5GB"
+declare -r MACHINE_CONFIG_M="-m 1GB -d 5GB"
 
 ## \brief Size configuration for an expanded node
-declare MACHINE_CONFIG_E="-m 3GB -d 5GB"
+declare -r MACHINE_CONFIG_E="-m 3GB -d 5GB"
 
 ## \brief Size configuration for a large node
-declare MACHINE_CONFIG_L="-m 2GB -d 10GB"
+declare -r MACHINE_CONFIG_L="-m 2GB -d 10GB"
 
 ## \brief Size configuration for a x-large node
-declare MACHINE_CONFIG_X="-m 4GB -d 15GB"
+declare -r MACHINE_CONFIG_X="-m 4GB -d 15GB"
 
 ## \brief Size configuration for a humongous node
-declare MACHINE_CONFIG_H="-m 8GB -d 20GB"
+declare -r MACHINE_CONFIG_H="-m 8GB -d 20GB"
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
 ## \brief Image to use for a `22` node
-declare IMAGE_UB22=jammy
+declare -r IMAGE_UB22=jammy
 
 ## \brief Image to use for a `20` node
-declare IMAGE_UB20=focal
+declare -r IMAGE_UB20=focal
 
 ## \brief Image to use for `18` node
-declare IMAGE_UB18=bionic
+declare -r IMAGE_UB18=bionic
 
 ## \brief Exit handler
 function cleanup {
@@ -105,6 +105,32 @@ function cleanup {
 }
 
 trap cleanup EXIT
+
+# Find out where mkmpnode.sh is
+if [[ ! -f ${MKMPNODE_SCRIPT} ]]; then
+    if [[ -L "${INSTALL_BIN_DIR}/mkmpnode" ]]; then
+        MKMPNODE_SCRIPT=$(readlink ${INSTALL_BIN_DIR}/mkmpnode)
+    else
+        MKMPNODE_SCRIPT="${SCRIPT_DIR}/mkmpnode.sh"
+        if [[ ! -f "$MKMPNODE_SCRIPT" ]]; then
+            errlog "Cannot find mkmpnode.sh"
+            exit 1
+        fi
+    fi
+fi
+
+# Find out where the cloud-init files are
+if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+    INSTALL_USERCLOUDINIT_DIR="./cloud"
+    if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+        INSTALL_USERCLOUDINIT_DIR="${SCRIPT_DIR}/cloud"
+        if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
+            errlog "Cannot locate cloud files"
+            exit 1
+        fi
+    fi
+fi
+
 
 ## \brief Format error message
 ## \param `$*` Error string to display
@@ -125,7 +151,10 @@ infolog() {
 ## \brief Get version from the one true source - the makefile
 printversion() {
     declare vers
-    if ! vers=$(grep DIST_VERSION Makefile | head -1 | awk '{printf "v" $3 }'); then
+    declare MAKEFILE_DIR
+
+    MAKEFILE_DIR=$(dirname "$MKMPNODE_SCRIPT")
+    if ! vers=$(grep DIST_VERSION "$MAKEFILE_DIR/Makefile" | head -1 | awk '{printf "v" $3 }'); then
         echo $vers
         errlog "Internal error. Failed to extract version from Makefile. Please report!"
         exit 1
@@ -179,30 +208,6 @@ EOT
 }
 
 
-# Find out where mkmpnode.sh is
-if [[ ! -f ${MKMPNODE_SCRIPT} ]]; then
-    if [[ -L "${INSTALL_BIN_DIR}/mkmpnode" ]]; then
-        MKMPNODE_SCRIPT=$(readlink ${INSTALL_BIN_DIR}/mkmpnode)
-    else
-        MKMPNODE_SCRIPT="${SCRIPT_DIR}/mkmpnode.sh"
-        if [[ ! -f "$MKMPNODE_SCRIPT" ]]; then
-            errlog "Cannot find mkmpnode.sh"
-            exit 1
-        fi
-    fi
-fi
-
-# Find out where the cloud-init files are
-if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
-    INSTALL_USERCLOUDINIT_DIR="./cloud"
-    if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
-        INSTALL_USERCLOUDINIT_DIR="${SCRIPT_DIR}/cloud"
-        if [[ ! -d $INSTALL_USERCLOUDINIT_DIR ]]; then
-            errlog "Cannot locate cloud files"
-            exit 1
-        fi
-    fi
-fi
 
 while [[ $OPTIND -le "$#" ]]; do
     if getopts svhn o; then
