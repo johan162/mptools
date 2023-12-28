@@ -1,7 +1,16 @@
 # Aliases {#aliases}
 
-After the install-script has been run the following shell aliases will be available
-to save some typing.
+
+After installation the set of aliases below are available in `mpaliases.inc`. 
+The file stored in the user cloud directory (usually `${HOME}/.mptools/`)
+user and the following line should be added to `.zshenv` to have the
+alias file included.
+
+```
+source ${HOME}/.mptools/mpaliases.inc
+```
+
+The aliases included currently are:
 
 ```shell
 alias mp="multipass"
@@ -17,8 +26,6 @@ alias mpsta="multipass start --all"
 alias mpsu="multipass suspend"
 alias mpsua="multipass suspend --all"
 ```
-
-These aliases can of course also be added manually.
 
 As an example, this will make it easy to connect to a node as so:
 

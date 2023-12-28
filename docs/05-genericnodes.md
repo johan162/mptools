@@ -29,7 +29,7 @@ home catalogue have a directory `~/Devel` it will be mounted automatically in th
 under the default users (`ubuntu`) home directory.
 
 @note Use the `-n` flag to do a dryrun and see how the underlying call to `multipass`
-is made wthout actually executing it.
+is made without actually executing it.
 
 ## Cloud init files
 As mentioned in the previous section `mkmpnode` uses cloud-init files to configure
@@ -50,6 +50,7 @@ As of this writing the following templates are provided:
 3. `cloud/mini-config.in`, A minimal node with only user and SSH keys
 4. `cloud/jenkins-config.in`, A basic Jenkins node
 5. `cloud/pg-config.in`, A basic Postgresql node
+6. `cloud/sq-config.in`, A basic SonarQube (Static Code Analysis) node
 
 These template cloud-init files will be used in the installation process to create
 customized versions based on the current user. The generated `*.yaml` files are
@@ -177,3 +178,13 @@ The TCP/IP access restriction is set to `"samenet"` any access must be from the 
 subnetwork that we are currently on (e.g. from another MP node or from the host).
 
 
+### Setting up a Jenkins server
+
+As a final example we have included a Cloud config file to help setup a Jenkins CI/CD server. 
+The default 500M memory is not enough so we need to adjust to 1GB
+
+```shell
+ % mkmpnode -c jenkins-config.yaml -m 1GB jenkins
+```
+
+The Jenkins instance can be accessed at `xxx.xxx.xxx.xxx:8080` to finalize the setup after installation

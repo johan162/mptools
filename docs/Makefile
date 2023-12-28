@@ -1,4 +1,5 @@
 # Build documentation with the help of doxygen
+MAKEFLAGS += --silent
 DOC_FILES := $(wildcard *.md)
 SCRIPT_FILES := $(wildcard ../*.sh)
 OUT_DIR := out

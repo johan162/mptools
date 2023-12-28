@@ -4,7 +4,7 @@
 # Core config
 # -----------------------------
 PROJECT_NAME           = mptools
-PROJECT_NUMBER         = 2.0.3
+PROJECT_NUMBER         = 2.0.4
 PROJECT_BRIEF          = "Utility to create multipass virtual nodes"
 OUTPUT_DIRECTORY       = out
 
@@ -14,7 +14,6 @@ INPUT                  = ../mpn.sh \
 						 ../mpinstall.sh \
                          01-intro.md \
                          02-installing.md \
-                         03-installmultipass.md \
                          04-quickstart.md \
                          05-genericnodes.md \
                          06-usingnamingconvention.md \

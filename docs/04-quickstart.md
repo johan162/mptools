@@ -24,6 +24,12 @@ graph TD
 ![Figure 1 - Relation between scripts](figs/mptools-relation-fig.png)  
 ***Figure 1:*** *Relation between scripts and the underlying `multipass`*
 
+## Accessing the node
+
+When the nodes are setup (using Cloud Init Files) the current users public SSH key are installed in the node
+so that it can be easily accessed by ´ssh´ directly without any password hassle.
+
+
 ## Examples 
 
 The following basic examples show how nodes can be created once the `mptools` package have been

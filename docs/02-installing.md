@@ -1,20 +1,25 @@
 # Installing mptools
 
+@note We assume that `multipass` have already been installed,
+(see [https://multipass.run/](https://multipass.run/) for more details on how to install.)
+If you are on a OSX system and have `homebrew` installed the easiest way
+to install is to call `brew install --cask multipass`
+
 It is recommended to download an official release (or use a tagged version in the repo)
 as there is no guarantee that the latest `main` branch is ready for deployment
 since that by definition is work in progress.
 
 1. Download, unpack and install the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
     ```shell
-    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.0.1.tar.gz
-    % tar xzf mptools-2.0.1.tar.gz
-    % cd mptools-2.0.1
+    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.0.4.tar.gz
+    % tar xzf mptools-2.0.4.tar.gz
+    % cd mptools-2.0.4
     % make install
     ```
 
    **Note:** If `curl` is not installed `wget` could be used to download the package as so
     ```shell
-    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.0.1.tar.gz
+    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.0.4/mptools-2.0.4.tar.gz
     ```
 
    The `make install` will install the scripts under `/usr/local/bin` . The get the
@@ -30,16 +35,8 @@ since that by definition is work in progress.
    This setup will then make it simple to ssh into the node for example as
    `% ssh 192.168.yy.xx` (where the IPv4 address is assigned to the node)  
    &nbsp;
-2. If `multipass` (see [https://multipass.run/](https://multipass.run/)) is not installed
-   then this is most easily done with the utility program provided
-    ```shell
-    % mpinstall
-    ```
-   **Note:** This requires [homebrew](https://brew.sh/) to be installed and an
-   error will be given if it is not installed.  
-   &nbsp;
 
-@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.0.0).
+@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.0.4).
 The one thing to remember is that the script files are named with the `*.sh` suffix. When the
 package is installed the symlink is the basename of the script without this suffix
 to make it slightly easier to call the script.*
