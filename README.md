@@ -3,8 +3,6 @@
 **mptools** Is a utility package for **macOS** to help to create 
 customized 
 virtual machine nodes using [multipass](https://multipass.run/). 
-In addition it can also help facilitate an adapted installation of **multipass** using the
-`mpinstall` utility.
 
 The customization of nodes are done through [cloud-init](https://cloud-init.io/) files. 
 A set of template cloud-init 
@@ -24,6 +22,10 @@ as through the `mpn -h` and `mkmpnode -h` respectively.
 ## Usage
 
 ### mpn
+
+Creates a multipass node with a simple text based specification of a node. In the background this will be 
+translated to the appropriate call (with all details) of `mkmpnode`.
+
 ```text
 % mpn -h
 NAME
@@ -38,13 +40,15 @@ SYNOPSIS
 
 The node name will control the size and capacity of the node.
 ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
-MAJOR_RELEASE=[18|20|22]
-CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
-SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous]
-NODE_NUMBER=[0-9]{2}
+MAJOR_RELEASE = [18|20|22]
+CONFIG        = [f=Full dev|m=Minimal dev|b=Basic none-dev node]
+SIZE          = [s=small|m=medium|l=large|x=x-larg|h=humungous]
+NODE_NUMBER   = [0-9]{2}
 ```
 
 ### mkmpnode
+
+Creates a multipass node where all the details have to be specified as options to the script.
 
 ```text
 % mkmpnode -h
@@ -70,8 +74,8 @@ SYNOPSIS
 Full documentation can be found in the `./docs` directory in the distributed tar-ball 
 both HTML and PDF format as
 
-1. (HTML) `./docs/mptools_userguide_html/index.html`
-2. (PDF) `./docs/mptools_userguide.pdf`
+1. (HTML) `./docs/out/html/index.html`
+2. (PDF) `./docs/out/latex/refman.pdf`
 
 The documentation is also available directly online in github as
 
