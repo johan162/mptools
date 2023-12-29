@@ -4,7 +4,7 @@
 # Core config
 # -----------------------------
 PROJECT_NAME           = mptools
-PROJECT_NUMBER         = 2.0.4
+PROJECT_NUMBER         = 2.1.0
 PROJECT_BRIEF          = "Utility to create multipass virtual nodes"
 OUTPUT_DIRECTORY       = out
 
