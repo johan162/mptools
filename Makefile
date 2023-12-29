@@ -7,7 +7,7 @@
 # ==============================================================================================
 
 # Uncomment to run the makefile silent
-# MAKEFLAGS += --silent
+MAKEFLAGS += --silent
 
 # Build up to four nodes in parallel
 MAKEFLAGS += -j4
@@ -37,11 +37,11 @@ IMAGE_UB20 := focal
 IMAGE_UB18 := bionic
 
 # Get user SSH key
-SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
+USER_SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.0.3
+DIST_VERSION := 2.0.4
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 DIST_DOCDIR := $(DIST_DIR)/docs
@@ -61,9 +61,13 @@ CLOUD_TEMPLATE_FILES := $(wildcard cloud/*.in)
 CLOUDINIT_FILES := $(patsubst %.in,%.yaml,$(CLOUD_TEMPLATE_FILES))
 
 # ... and all tool files and shell scripts
-SCRIPT_FILES := $(wildcard *.sh)
+SCRIPT_FILES := $(wildcard *.sh$)
 
+# ... and make the bin files without extension
 SCRIPT_BINFILES := $(patsubst %.sh,%,$(SCRIPT_FILES))
+
+# ... shell extensions (currently only aliases)
+SHELL_EXTENSIONS := $(wildcard *.sh.inc)
 
 # Documentation
 LICENSE_FILE := LICENSE
@@ -83,7 +87,7 @@ node: $(NODES)
 # Note: Use '#' as split character in sed since '/' is a valid character in base64
 %.yaml : %.in
 	$(info Transforming $< --> $@)
-	@sed -e 's#\$${SSH_PUBLIC_KEY}#$(SSH_KEY)#g' -e 's/\$${USER}/${USER}/g' < $< > $@
+	@sed -e 's#\$${SSH_PUBLIC_KEY}#$(USER_SSH_KEY)#g' -e 's/\$${USER}/${USER}/g' < $< > $@
 
 # This rule creates the given nodes according to the naming convention.
 # This requires some explanation.
@@ -116,7 +120,7 @@ $(DIST_DIR).tar.gz: $(SCRIPT_FILES) $(CLOUD_TEMPLATE_FILES) $(DOC_FILES)
 	rm -rf $(DIST_DIR)
 	mkdir -p $(DIST_CLOUDDIR)
 	mkdir -p $(DIST_DOCDIR)
-	cp Makefile $(LICENSE_FILE) $(SCRIPT_FILES) $(DIST_DIR)
+	cp Makefile $(LICENSE_FILE) $(SCRIPT_FILES)  $(SHELL_EXTENSIONS) $(DIST_DIR)
 	cp $(CLOUD_TEMPLATE_FILES) $(DIST_CLOUDDIR)
 	cp -r $(DOC_SRC_HTML_DIR) $(DOC_DST_HTML_DIR)
 	cp $(DOC_SRC_PDF_FILE) $(DOC_DST_PDF_FILE)
@@ -130,20 +134,25 @@ dist: $(DIST_DIR).tar.gz
 install: all
 	@if [ -d $(INSTALL_DIR) ]; then echo "Package already installed under: $(INSTALL_DIR)"; exit 1; fi
 	@for files in $(SCRIPT_FILES); do if [ -f $(INSTALL_BIN_DIR)/$${files%.sh} ]; then echo "Link(s) already exists:" \"$(INSTALL_BIN_DIR)/$${files%.sh}\"". Please remove previous installation before installing." ; exit 1; fi; done
-	if [[ ! -d $(INSTALL_CLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_CLOUDINIT_DIR); fi
-	if [[ ! -d $(INSTALL_BIN_DIR) ]]; then mkdir -p $(INSTALL_BIN_DIR); fi
-	cp $(CLOUD_TEMPLATE_FILES) $(INSTALL_CLOUDINIT_DIR)
-	cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
-	if [[ ! -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_USERCLOUDINIT_DIR); fi
-	cp $(CLOUDINIT_FILES) $(INSTALL_USERCLOUDINIT_DIR)
-	chmod +x $(INSTALL_DIR)/*.sh
-	for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BIN_DIR)/$${files%.sh}; done
-	@echo "================================================================================="
+	@if [[ ! -d $(INSTALL_CLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_CLOUDINIT_DIR); fi
+	@if [[ ! -d $(INSTALL_BIN_DIR) ]]; then mkdir -p $(INSTALL_BIN_DIR); fi
+	@cp $(CLOUD_TEMPLATE_FILES) $(INSTALL_CLOUDINIT_DIR)
+	@cp Makefile $(DOC_FILES) $(SCRIPT_FILES) $(INSTALL_DIR)
+	@if [[ ! -d $(INSTALL_USERCLOUDINIT_DIR) ]]; then mkdir -p $(INSTALL_USERCLOUDINIT_DIR); fi
+	@cp $(CLOUDINIT_FILES) $(INSTALL_USERCLOUDINIT_DIR)
+	@cp $(SHELL_EXTENSIONS) $(INSTALL_USERCLOUDINIT_DIR)
+	@chmod +x $(INSTALL_DIR)/*.sh
+	@for files in $(SCRIPT_FILES); do ln -s $(INSTALL_DIR)/$${files} $(INSTALL_BIN_DIR)/$${files%.sh}; done
+	@echo "INSTALLATION SUMMARY"
+	@echo "===================="
 	@echo "Installed package in: \"$(INSTALL_DIR)\""
 	@echo "Linked script files as:"
 	@for files in $(SCRIPT_FILES); do echo " - " $(INSTALL_BIN_DIR)/$${files%.sh} "->" $(INSTALL_DIR)/$${files}; done
 	@echo "Cloud-init files installed in: \"$(INSTALL_USERCLOUDINIT_DIR)\""
-	@echo "================================================================================="
+	@echo "To activate shell extensions and aliases add the following line(s) in you .zshenv file:"
+	@echo ""
+	@for files in $(SHELL_EXTENSIONS); do echo "source" $(INSTALL_USERCLOUDINIT_DIR)/$${files%.sh}; done
+	@echo ""
 
 # Since we cannot know if the uninstall is run after we upgrades this script
 # we cannot assume that the current installation version is the same as the one
@@ -151,7 +160,8 @@ install: all
 # the link from the installed binaries to figure out the previous installed version.
 uninstall:
 	@if [[ -h $(INSTALL_BIN_DIR)/mkmpnode ]] || [[ -h $(INSTALL_BIN_DIR)/mpn ]] || [[ -h $(INSTALL_BIN_DIR)/mkinstall ]]; then \
-      echo "================================================================" ;                 \
+      echo "UNINSTALLATION SUMMARY" ;                                                           \
+      echo "======================" ;                                                           \
       INSTALLED_DIR=$$(dirname $$(readlink $(INSTALL_BIN_DIR)/mkmpnode));                       \
 	  echo "Uninstall successful, removed: " ;                                                  \
 	  echo " -" $${INSTALLED_DIR};                                                              \
@@ -160,7 +170,7 @@ uninstall:
 	  rm -rf $${INSTALLED_DIR};                                                                 \
 	  rm -rf $(INSTALL_USERCLOUDINIT_DIR) ;                                                     \
 	  for files in $(SCRIPT_FILES); do rm -f $(INSTALL_BIN_DIR)/$${files%.sh}; done;            \
-	  echo "================================================================" ;                 \
+	  echo "";                                                                                  \
 	else                                                                                        \
 	  if [[ -d $(INSTALL_USERCLOUDINIT_DIR) ]] || [[ $$(ls $(INSTALL_PREFIX)/share | grep "^mptools-") ]]; then \
 		echo "Broken installation, missing installed script. Trying to clean up";               \
@@ -186,6 +196,12 @@ uninstall:
 # Used to help debug makefile
 _dbg:
 	@echo MAKEFILE_DIR=$(MAKEFILE_DIR)
+	@echo "----------------"
+	@echo "--- VARIABLES"
+	@echo "----------------"
+	@echo SCRIPT_FILES=${SCRIPT_FILES}
+	@echo SHELL_EXTENSIONS=${SHELL_EXTENSIONS}
+	@echo SCRIPT_BINFILES=${SCRIPT_BINFILES}
 	@echo "----------------"
 	@echo "--- PKG & DIST"
 	@echo "----------------"
