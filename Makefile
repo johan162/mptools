@@ -41,7 +41,7 @@ USER_SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.0.4
+DIST_VERSION := 2.1.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 DIST_DOCDIR := $(DIST_DIR)/docs
