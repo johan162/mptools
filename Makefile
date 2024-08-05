@@ -13,7 +13,7 @@ MAKEFLAGS += --silent
 MAKEFLAGS += -j4
 
 # Default nodes when making target "make node"
-NODES := ub22fs01 ub20fs01 ub18fs01
+NODES := ub24fs01 ub22fs01 ub20fs01 ub18fs01
 
 # ================================================================================================
 # Setup section
@@ -30,8 +30,10 @@ MACHINE_CONFIG_E := -m 3GB -d 5GB
 MACHINE_CONFIG_L := -m 2GB -d 10GB
 MACHINE_CONFIG_X := -m 4GB -d 15GB
 MACHINE_CONFIG_H := -m 8GB -d 20GB
+MACHINE_CONFIG_Z := -m 16GB -d 20GB
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
+IMAGE_UB24 := noble
 IMAGE_UB22 := jammy
 IMAGE_UB20 := focal
 IMAGE_UB18 := bionic
@@ -41,7 +43,7 @@ USER_SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.1.0
+DIST_VERSION := 2.2.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 DIST_DOCDIR := $(DIST_DIR)/docs
@@ -93,7 +95,7 @@ node: $(NODES)
 # This requires some explanation.
 # We are extracting the markers for image, cloud cofig and machine size from the
 # name with 'cut'. Then we create the variable name of one of the predefined variables above.
-# (We need to use eval as we want the makefile variables to be evauated dynamically
+# (We need to use eval as we want the makefile variables to be evaluated dynamically
 # when the rule is evaluated and not in the initial parsing.)
 # Finally we evaluate that variable indirectly to get the value specified above.
 #
@@ -103,7 +105,7 @@ node: $(NODES)
 # the correct naming convention.
 
 $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
-	@$$(echo "$@" | egrep -q 'ub(22|18|20)[bmf][smlexh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
+	@$$(echo "$@" | egrep -q 'ub(24|22|20|18)[bmf][smlexh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))

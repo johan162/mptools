@@ -31,6 +31,7 @@ the following three default nodes are then prepared:
 - ub18fs01 (Based on "bionic", a.k.a Ubuntu 18 LTS )
 - ub20fs01 (Based on "focal", a.k.a Ubuntu 20 LTS )
 - ub22fs01 (Based on "jammy", a.k.a Ubuntu 22 LTS )
+- ub24fs01 (Based on "noble", a.k.a Ubuntu 24 LTS )
 
 In order to build all nodes in parallel use the usual `-j` option to make.
 So for example to build up to four nodes in parallel call

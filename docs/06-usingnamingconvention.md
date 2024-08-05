@@ -48,6 +48,7 @@ ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 * `18` (="bionic")
 * `20` (="focal")
 * `22` (="jammy")
+* `24` (="noble")
 
 ### CONFIG
 
@@ -62,6 +63,7 @@ ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 * `l` &nbsp; (= Large=2GB RAM/10GB Disk)
 * `x` &nbsp; (= X-Large=4GB RAM/15GB Disk)
 * `h` &nbsp; (= Humungous=8GB RAM/20GB Disk)
+* `z` &nbsp; (= Zuper Humungous=16GB RAM/20GB Disk)
 
 ### NODE_NUMBER
 
@@ -71,6 +73,7 @@ ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 
 Some examples of valid names are:
 
+- `ub24bz01` - A Ubuntu 24 image, basic cloud config, Zuper Humungus machine size
 - `ub20bl01` - A Ubuntu 20 image, basic cloud config, large machine size
 - `ub18fm01` - A Ubuntu 18 image, full development setup, medium machine size
 - `ub22mx12` - A Ubuntu 22 image, minimal development setup, x-large machine size

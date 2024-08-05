@@ -38,7 +38,7 @@ are explained in the rest of the user guide. The purpose of these examples are j
 enough to determine if this package is a good fit for purpose.
 
 ### Creating nodes using naming convention
-1. `mpn ub22fl01` - Create a node based on Ubuntu 22 LTS with a full development
+1. `mpn ub24fl01` - Create a node based on Ubuntu 24 LTS with a full development
    configuration (**f**) in a large (**l**) size node.
 2. `mpn ub18bs01` - Create a node based on Ubuntu 18 LTS with a basic (**b**) node configuration (no development environment) in a small (**s**) node.
 3. `mpn ub20ms01 ub20ms02` - Create two nodes, both based on Ubuntu 20 LTS, minimum development configuration (**m**) in a small (**s**) node.

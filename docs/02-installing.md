@@ -11,15 +11,15 @@ since that by definition is work in progress.
 
 1. Download, unpack and install the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
     ```shell
-    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.0.4.tar.gz
-    % tar xzf mptools-2.0.4.tar.gz
-    % cd mptools-2.0.4
+    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.2.0.tar.gz
+    % tar xzf mptools-2.2.0.tar.gz
+    % cd mptools-2.2.0
     % make install
     ```
 
    **Note:** If `curl` is not installed `wget` could be used to download the package as so
     ```shell
-    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.0.4/mptools-2.0.4.tar.gz
+    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.2.0/mptools-2.2.0.tar.gz
     ```
 
    The `make install` will install the scripts under `/usr/local/bin` . The get the
@@ -36,7 +36,7 @@ since that by definition is work in progress.
    `% ssh 192.168.yy.xx` (where the IPv4 address is assigned to the node)  
    &nbsp;
 
-@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.0.4).
+@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.2.0).
 The one thing to remember is that the script files are named with the `*.sh` suffix. When the
 package is installed the symlink is the basename of the script without this suffix
 to make it slightly easier to call the script.*
