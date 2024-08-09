@@ -32,6 +32,9 @@ declare ubuntuVer=noble
 ## @brief Node name. Specified by user
 declare nodeName=
 
+## @brief Make the node available on external network
+declare bridged=
+
 ## @brief Node memory size.
 declare memory="800M"
 
@@ -151,9 +154,9 @@ usage() {
     name=$(basename "$0")
     cat <<EOT
 NAME
-   $name - Create multipass nodes with a specified (or default) cloud-init file
+   $name - Create multipass node with a specified (or default) cloud-init file
 USAGE
-   $name [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
+   $name [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-b] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
       -r RELEASE: Valid ubuntu release [bionic focal impish jammy noble docker] ($ubuntuVer)
       -c FILE   : Cloud config file (${defaultCloudInit})
@@ -162,6 +165,7 @@ SYNOPSIS
       -p NUM    : Number of CPUs (${cpus})
       -M        : Mount ${HOME}/Devel inside node
       -n        : No execution. Only display actions.
+      -b        : Bridge the node. NOTE requires "local.bridged-network" to be specified
       -q        : Quiet  (no output to stdout)
       -v        : Print version and exit
       -h        : Print help and exit
@@ -170,7 +174,7 @@ EOT
 }
 
 while [[ $OPTIND -le "$#" ]]; do
-    if getopts r:c:m:d:p:hMvn o; then
+    if getopts r:c:m:d:p:hMvnb o; then
         case "$o" in
             h)
                 usage "$0"
@@ -182,6 +186,15 @@ while [[ $OPTIND -le "$#" ]]; do
                     exit 1
                 fi
                 ubuntuVer="$OPTARG"
+                ;;
+            b)
+                if [[ -z $(multipass get local.bridged-network) ]]; then
+                  errlog "You must set 'local.bridged-network' to use bridged nodes."
+                  errlog "For example: 'multipass set local.bridged-network=en0' to first adapter (often WiFi on laptop)"
+                  errlog "You can check your available networks with 'multipass networks'"
+                  exit 1
+                fi
+                bridged="yes"
                 ;;
             c)
                 cloudInit="$OPTARG"
@@ -276,9 +289,15 @@ else
         exit 1
     fi
 
+    bridged_opt="--bridged "
+    if [[ -z ${bridged} ]]; then
+      bridged_opt=
+    fi
+
+
     if [[ ${noexecute} -eq 0 ]]; then
-        infolog "Executing: multipass launch ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
-        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer >/dev/null; then
+        infolog "Executing: multipass launch ${cinitopt} --name $nodeName $bridged_opt --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
+        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName $bridged_opt --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer >/dev/null; then
             errlog "Failed to create node!"
             exit 1
         fi
@@ -295,7 +314,7 @@ else
 
         multipass info $nodeName
     else
-        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
+        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName $bridged_opt --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
         echo multipass restart $nodeName
         echo multipass info $nodeName
     fi

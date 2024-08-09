@@ -93,7 +93,7 @@ declare -r MACHINE_CONFIG_H="-m 8GB -d 15GB"
 declare -r MACHINE_CONFIG_Z="-m 12GB -d 20GB"
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
-## \brief Image to use for a `22` node
+## \brief Image to use for a `24` node
 declare -r IMAGE_UB24=noble
 
 ## \brief Image to use for a `22` node
@@ -104,6 +104,9 @@ declare -r IMAGE_UB20=focal
 
 ## \brief Image to use for `18` node
 declare -r IMAGE_UB18=bionic
+
+## \brief Setup the node for bridged network (or not) defaults to "not"
+declare bridged=
 
 ## \brief Exit handler
 function cleanup {
@@ -200,6 +203,7 @@ USAGE
    $name [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
 SYNOPSIS
       -h        : Print help and exit
+      -b        : Bridge the nodes (make them available on the local network)
       -n        : No execution. Only display actions.
       -s        : Silent
       -v        : Print version and exit
@@ -216,11 +220,20 @@ EOT
 
 
 while [[ $OPTIND -le "$#" ]]; do
-    if getopts svhn o; then
+    if getopts svhnb o; then
         case "$o" in
             v)
                 printversion "$0"
                 exit 0
+                ;;
+            b)
+                if [[ -z $(multipass get local.bridged-network) ]]; then
+                    errlog "You must set 'local.bridged-network' to use bridged nodes."
+                    errlog "For example: 'multipass set local.bridged-network=en0' to first adapter (often WiFi on laptop)"
+                    errlog "You can check your available networks with 'multipass networks'"
+                    exit 1
+                fi
+                bridged="-b "
                 ;;
             h)
                 usage "$0"
@@ -261,9 +274,9 @@ while [[ $OPTIND -le "$#" ]]; do
             IMAGE=IMAGE_UB$(echo $nodeName | cut -c 3-4 | tr '[:lower:]' '[:upper:]')
 
             if [[ ${noexec} -eq 1 ]]; then
-                ${MKMPNODE_SCRIPT} -n -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE_SCRIPT} -n -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} ${bridged} $nodeName &
             else
-                ${MKMPNODE_SCRIPT} -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} $nodeName &
+                ${MKMPNODE_SCRIPT} -r ${!IMAGE} -c ${INSTALL_USERCLOUDINIT_DIR}/${!CLOUD_CONF} ${!MACHINE_SIZE} ${bridged} $nodeName &
             fi
         fi
         ((OPTIND++))
