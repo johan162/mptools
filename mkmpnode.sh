@@ -8,7 +8,7 @@
 ## USAGE
 ##   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 ## SYNOPSIS
-##      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
+##      -r RELEASE: Valid ubuntu release [bionic focal impish jammy noble docker] ($ubuntuVer)
 ##      -c FILE   : Cloud config file (${defaultCloudInit})
 ##      -m SIZE   : Memory size, defaults (500MB)
 ##      -d SIZE   : Disk size, defaults (5GB)
@@ -27,16 +27,16 @@ set -o nounset
 set -o pipefail
 
 ## @brief Which base image to use. Can be overridden by ned user.
-declare ubuntuVer=jammy
+declare ubuntuVer=noble
 
 ## @brief Node name. Specified by user
 declare nodeName=
 
 ## @brief Node memory size.
-declare memory="500M"
+declare memory="800M"
 
 ## @brief Node disk size.
-declare disk="5G"
+declare disk="8G"
 
 ## @brief Number of virtual CPUs available for node
 declare -i cpus=2
@@ -45,7 +45,7 @@ declare -i cpus=2
 declare mountDev=0
 
 ## @brief Valid options for ubuntuVer
-declare -r vlist=("bionic" "focal" "impish" "jammy" "docker")
+declare -r vlist=("bionic" "focal" "impish" "jammy" "noble" "docker")
 
 ## @brief Flag for doing a dryrun
 declare -i noexecute=0
@@ -155,7 +155,7 @@ NAME
 USAGE
    $name [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
-      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
+      -r RELEASE: Valid ubuntu release [bionic focal impish jammy noble docker] ($ubuntuVer)
       -c FILE   : Cloud config file (${defaultCloudInit})
       -m SIZE   : Memory size, defaults (${memory})
       -d SIZE   : Disk size, defaults (${disk}GB)
@@ -249,7 +249,7 @@ else
     fi
 
     declare cinitopt=""
-    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+#    SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
     # We must have a cloud-init file
     if [[ -z $cloudInit ]]; then
@@ -277,8 +277,8 @@ else
     fi
 
     if [[ ${noexecute} -eq 0 ]]; then
-        infolog "Executing: multipass launch ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
-        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer >/dev/null; then
+        infolog "Executing: multipass launch ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer\n"
+        if ! multipass launch --timeout 600 ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer >/dev/null; then
             errlog "Failed to create node!"
             exit 1
         fi
@@ -295,7 +295,7 @@ else
 
         multipass info $nodeName
     else
-        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --mem $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
+        echo multipass launch --timeout 600 ${cinitopt} --name $nodeName --memory $memory --disk $disk --cpus $cpus ${mountopt} $ubuntuVer
         echo multipass restart $nodeName
         echo multipass info $nodeName
     fi
