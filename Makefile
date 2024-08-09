@@ -25,12 +25,12 @@ CLOUD_CONFIG_M := cloud/minidev-config.yaml
 
 # Predefined sizes based on the infix in the node name
 MACHINE_CONFIG_S := -m 500MB -d 5GB
-MACHINE_CONFIG_M := -m 1GB -d 5GB
-MACHINE_CONFIG_E := -m 3GB -d 5GB
+MACHINE_CONFIG_M := -m 1.5GB -d 8GB
+MACHINE_CONFIG_E := -m 3GB -d 8GB
 MACHINE_CONFIG_L := -m 2GB -d 10GB
-MACHINE_CONFIG_X := -m 4GB -d 15GB
-MACHINE_CONFIG_H := -m 8GB -d 20GB
-MACHINE_CONFIG_Z := -m 16GB -d 20GB
+MACHINE_CONFIG_X := -m 4GB -d 10GB
+MACHINE_CONFIG_H := -m 8GB -d 15GB
+MACHINE_CONFIG_Z := -m 16GB -d 15GB
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
 IMAGE_UB24 := noble
@@ -43,7 +43,7 @@ USER_SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
 
 # Record keeping for the release
 PKG_NAME := mptools
-DIST_VERSION := 2.2.0
+DIST_VERSION := 2.3.0
 DIST_DIR := $(PKG_NAME)-$(DIST_VERSION)
 DIST_CLOUDDIR := $(DIST_DIR)/cloud
 DIST_DOCDIR := $(DIST_DIR)/docs
