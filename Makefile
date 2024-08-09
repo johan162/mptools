@@ -13,7 +13,7 @@ MAKEFLAGS += --silent
 MAKEFLAGS += -j4
 
 # Default nodes when making target "make node"
-NODES := ub24fm01 ub22fm01 ub20fm01 ub18fm01
+NODES := ub24fm01 ub22fm01 ub20fm01
 
 # ================================================================================================
 # Setup section
@@ -25,18 +25,17 @@ CLOUD_CONFIG_M := cloud/minidev-config.yaml
 
 # Predefined sizes based on the infix in the node name
 MACHINE_CONFIG_S := -m 500MB -d 5GB
-MACHINE_CONFIG_M := -m 1.5GB -d 8GB
-MACHINE_CONFIG_E := -m 3GB -d 8GB
+MACHINE_CONFIG_M := -m 1GB -d 7GB
+MACHINE_CONFIG_E := -m 3GB -d 7GB
 MACHINE_CONFIG_L := -m 2GB -d 10GB
 MACHINE_CONFIG_X := -m 4GB -d 10GB
 MACHINE_CONFIG_H := -m 8GB -d 15GB
-MACHINE_CONFIG_Z := -m 16GB -d 15GB
+MACHINE_CONFIG_Z := -m 12GB -d 15GB
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
 IMAGE_UB24 := noble
 IMAGE_UB22 := jammy
 IMAGE_UB20 := focal
-IMAGE_UB18 := bionic
 
 # Get user SSH key
 USER_SSH_KEY=$(shell cat $${HOME}/.ssh/id_rsa.pub)
@@ -105,7 +104,7 @@ node: $(NODES)
 # the correct naming convention.
 
 $(filter ub%,$(NODES)): $(CLOUD_CONFIG_F) $(CLOUD_CONFIG_M) $(CLOUD_CONFIG_B)
-	@$$(echo "$@" | egrep -q 'ub(24|22|20|18)[bmf][smlexh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
+	@$$(echo "$@" | egrep -q 'ub(24|22|20)[bmf][smlexh][0-9]{2}') || (echo "Node name not in recognised format. \"ub<UBUNTUVERSION><CLOUDCONF><MACHINESIZE><NODENUMBER\">";exit 1)
 	$(eval CLOUD_CONF := CLOUD_CONFIG_$(shell echo $@|cut -c 5|tr  '[:lower:]' '[:upper:]'))
 	$(eval MACHINE_SIZE := MACHINE_CONFIG_$(shell echo $@|cut -c 6|tr  '[:lower:]' '[:upper:]'))
 	$(eval IMAGE := IMAGE_UB$(shell echo $@|cut -c 3-4|tr  '[:lower:]' '[:upper:]'))

@@ -8,7 +8,7 @@
 ## USAGE
 ##   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 ## SYNOPSIS
-##      -r RELEASE: Valid ubuntu release [bionic focal impish jammy noble docker] ($ubuntuVer)
+##      -r RELEASE: Valid ubuntu release [focal impish jammy noble docker] ($ubuntuVer)
 ##      -c FILE   : Cloud config file (${defaultCloudInit})
 ##      -m SIZE   : Memory size, defaults (500MB)
 ##      -d SIZE   : Disk size, defaults (5GB)
@@ -48,7 +48,7 @@ declare -i cpus=2
 declare mountDev=0
 
 ## @brief Valid options for ubuntuVer
-declare -r vlist=("bionic" "focal" "impish" "jammy" "noble" "docker")
+declare -r vlist=("focal" "impish" "jammy" "noble" "docker")
 
 ## @brief Flag for doing a dryrun
 declare -i noexecute=0
@@ -158,7 +158,7 @@ NAME
 USAGE
    $name [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-b] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
-      -r RELEASE: Valid ubuntu release [bionic focal impish jammy noble docker] ($ubuntuVer)
+      -r RELEASE: Valid ubuntu release [focal impish jammy noble docker] ($ubuntuVer)
       -c FILE   : Cloud config file (${defaultCloudInit})
       -m SIZE   : Memory size, defaults (${memory})
       -d SIZE   : Disk size, defaults (${disk}GB)

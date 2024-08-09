@@ -64,7 +64,6 @@ REFERENCES_RELATION    = NO
 REFERENCES_LINK_SOURCE = YES
 VERBATIM_HEADERS       = YES
 ALPHABETICAL_INDEX     = YES
-IGNORE_PREFIX          = hpdftbl_
 
 # -----------------------------
 # HTML output config

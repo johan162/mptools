@@ -75,10 +75,10 @@ declare -r CLOUD_CONFIG_M="minidev-config.yaml"
 declare -r MACHINE_CONFIG_S="-m 500MB -d 5GB"
 
 ## \brief Size configuration for a medium node
-declare -r MACHINE_CONFIG_M="-m 1.5GB -d 8GB"
+declare -r MACHINE_CONFIG_M="-m 1GB -d 7GB"
 
 ## \brief Size configuration for an expanded node
-declare -r MACHINE_CONFIG_E="-m 3GB -d 8GB"
+declare -r MACHINE_CONFIG_E="-m 3GB -d 7GB"
 
 ## \brief Size configuration for a large node
 declare -r MACHINE_CONFIG_L="-m 2GB -d 10GB"
@@ -90,7 +90,7 @@ declare -r MACHINE_CONFIG_X="-m 4GB -d 10GB"
 declare -r MACHINE_CONFIG_H="-m 8GB -d 15GB"
 
 ## \brief Size configuration for a zuper humongous node
-declare -r MACHINE_CONFIG_Z="-m 12GB -d 20GB"
+declare -r MACHINE_CONFIG_Z="-m 12GB -d 15GB"
 
 # Predefined image names corresponding to the major Ubuntu releases as specified in the node name
 ## \brief Image to use for a `24` node
@@ -101,9 +101,6 @@ declare -r IMAGE_UB22=jammy
 
 ## \brief Image to use for a `20` node
 declare -r IMAGE_UB20=focal
-
-## \brief Image to use for `18` node
-declare -r IMAGE_UB18=bionic
 
 ## \brief Setup the node for bridged network (or not) defaults to "not"
 declare bridged=
@@ -210,14 +207,12 @@ SYNOPSIS
 
 The node name will control the size and capacity of the node.
 ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
-MAJOR_RELEASE=[18|20|22|24]
+MAJOR_RELEASE=[20|22|24]
 CONFIG=[f=Full dev|m=Minimal dev|b=Basic none-dev node]
-SIZE=[s=small|m=medium|l=large|x=x-larg|h=humungous|z=zuper humungus]
+SIZE=[s=small|m=medium|l=large|x=x-large|h=humungous|z=zuper humungus]
 NODE_NUMBER=[0-9]{2}
 EOT
 }
-
-
 
 while [[ $OPTIND -le "$#" ]]; do
     if getopts svhnb o; then
@@ -254,8 +249,8 @@ while [[ $OPTIND -le "$#" ]]; do
         esac
     elif [[ $OPTIND -le "$#" ]]; then
         nodeName="${!OPTIND}"
-        if [[ ! "$nodeName" =~ ^ub(24|22|18|20)[bmf][smlexhz][0-9]{2}$ ]]; then
-            errlog "Node name \"$nodeName\" not in recognised format ub<18|20|22|24><b|m|f|><s|m|l|x|h|z><NODENUMBER>"
+        if [[ ! "$nodeName" =~ ^ub(24|22|20)[bmf][smlexhz][0-9]{2}$ ]]; then
+            errlog "Node name \"$nodeName\" not in recognised format ub<20|22|24><b|m|f|><s|m|l|x|h|z><NODENUMBER>"
             exit 1
         fi
 
