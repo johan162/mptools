@@ -188,7 +188,8 @@ while [[ $OPTIND -le "$#" ]]; do
                 ubuntuVer="$OPTARG"
                 ;;
             b)
-                if [[ -z $(multipass get local.bridged-network) ]]; then
+                nw=$(multipass get local.bridged-network)
+                if [[  $nw = "<empty>" ]]; then
                   errlog "You must set 'local.bridged-network' to use bridged nodes."
                   errlog "For example: 'multipass set local.bridged-network=en0' to first adapter (often WiFi on laptop)"
                   errlog "You can check your available networks with 'multipass networks'"

@@ -13,7 +13,7 @@ MAKEFLAGS += --silent
 MAKEFLAGS += -j4
 
 # Default nodes when making target "make node"
-NODES := ub24fs01 ub22fs01 ub20fs01 ub18fs01
+NODES := ub24fm01 ub22fm01 ub20fm01 ub18fm01
 
 # ================================================================================================
 # Setup section
