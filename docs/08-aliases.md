@@ -30,7 +30,7 @@ alias mpsua="multipass suspend --all"
 As an example, this will make it easy to connect to a node as so:
 
 ```shell
-% mps ub18fs01
+% mps ub24fs01
 ```
 
 or get information on the node

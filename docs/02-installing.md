@@ -9,34 +9,41 @@ It is recommended to download an official release (or use a tagged version in th
 as there is no guarantee that the latest `main` branch is ready for deployment
 since that by definition is work in progress.
 
-1. Download, unpack and install the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
+1. Download the latest tar-ball `mptools-x.y.z.tar.gz`, e.g.
     ```shell
-    % curl -LO https://github.com/johan162/mptools/releases/download/v2.0.1/mptools-2.2.0.tar.gz
-    % tar xzf mptools-2.2.0.tar.gz
-    % cd mptools-2.2.0
+    % curl -LO https://github.com/johan162/mptools/releases/download/v2.3.0/mptools-2.3.0.tar.gz
+    ```
+
+2. Unpack and install the package
+    ```shell
+    % tar xzf mptools-2.3.0.tar.gz
+    % cd mptools-2.3.0
     % make install
     ```
 
-   **Note:** If `curl` is not installed `wget` could be used to download the package as so
-    ```shell
-    %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.2.0/mptools-2.2.0.tar.gz
-    ```
+The install step will also create customized cloud-init files that matches the current users
+public SSH keys.
 
-   The `make install` will install the scripts under `/usr/local/bin` . The get the
-   shell autocompletion updated either the terminal have to restarted
-   or call `rehash` to update the shell auto-completion hash.  
-   &nbsp;  
-   In addition to installing the scripts the install target will also create a hidden directory
-   in the current users home directory at `~/.mptools`. In that directory a number
-   of customized cloud-init files will be stored. These are customized with the
-   current users public SSH key as well as also setting up user account with the
-   same name as the current user in the created nodes.    
-   &nbsp;  
-   This setup will then make it simple to ssh into the node for example as
-   `% ssh 192.168.yy.xx` (where the IPv4 address is assigned to the node)  
-   &nbsp;
+**Note:** If `curl` is not installed `wget` could be used to download the package as so
+ ```shell
+ %  wget -q --show-progress https://github.com/johan162/mptools/releases/download/v2.3.0/mptools-2.3.0.tar.gz
+ ```
 
-@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.2.0).
+The `make install` will install the scripts under `/usr/local/bin` . The get the
+shell autocompletion updated either the terminal have to restarted
+or call `rehash` to update the shell auto-completion hash.  
+&nbsp;  
+In addition to installing the scripts the install target will also create a hidden directory
+in the current users home directory at `~/.mptools`. In that directory a number
+of customized cloud-init files will be stored. These are customized with the
+current users public SSH key as well as also setting up user account with the
+same name as the current user in the created nodes.    
+&nbsp;  
+This setup will then make it simple to ssh into the node for example as
+`% ssh 192.168.yy.xx` (where the IPv4 address is assigned to the node)  
+&nbsp;
+
+@note The scripts can also be run directly from the downloaded package directory (e.g. mptools-2.3.0).
 The one thing to remember is that the script files are named with the `*.sh` suffix. When the
 package is installed the symlink is the basename of the script without this suffix
 to make it slightly easier to call the script.*

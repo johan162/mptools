@@ -24,15 +24,14 @@ To create nodes one simply specifies one or more nodes using the naming
 format as arguments (see next section) for example:
 
 ```shell
-% mpn ub18fs01 ub20ml01 ub22fl01
+% mpn ub20ml01 ub22fs01 ub24fm01
 ```
-This will create three new nodes based on Ubuntu 18, 20 and 22 LTS images.
-The Ubuntu 18, and the Ubuntu 22 will both have  
-a full development environment in a "small" node and "large" node respectively.
+This will create three new nodes based on Ubuntu 20,22 and 24 LTS images.
+The Ubuntu 22, and the Ubuntu 24 will both have  
+a full development environment in a "small" node and "medium" node respectively.
 
-The middle Ubuntu 20 based node will be a minimal development environment
+The Ubuntu 20 based node will be a minimal development environment
 in a "large" node.
-
 
 When creating multiple nodes the script will kick of up to four parallel  node
 creations. This greatly reduces the total build/creation time.
@@ -45,7 +44,6 @@ ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 
 ### MAJOR_RELEASE
 
-* `18` (="bionic")
 * `20` (="focal")
 * `22` (="jammy")
 * `24` (="noble")
@@ -59,11 +57,11 @@ ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
 ### SIZE
 
 * `s` &nbsp; (= Small=500MB RAM/5GB Disk)
-* `m` &nbsp; (= Medium=1GB RAM/5GB Disk)
-* `l` &nbsp; (= Large=2GB RAM/10GB Disk)
+* `m` &nbsp; (= Medium=1GB RAM/7GB Disk)
+* `l` &nbsp; (= Large=2GB RAM/7GB Disk)
 * `x` &nbsp; (= X-Large=4GB RAM/15GB Disk)
-* `h` &nbsp; (= Humungous=8GB RAM/20GB Disk)
-* `z` &nbsp; (= Zuper Humungous=16GB RAM/20GB Disk)
+* `h` &nbsp; (= Humungous=8GB RAM/15GB Disk)
+* `z` &nbsp; (= Zuper Humungous=12GB RAM/15GB Disk)
 
 ### NODE_NUMBER
 
@@ -75,7 +73,6 @@ Some examples of valid names are:
 
 - `ub24bz01` - A Ubuntu 24 image, basic cloud config, Zuper Humungus machine size
 - `ub20bl01` - A Ubuntu 20 image, basic cloud config, large machine size
-- `ub18fm01` - A Ubuntu 18 image, full development setup, medium machine size
 - `ub22mx12` - A Ubuntu 22 image, minimal development setup, x-large machine size
 
 &nbsp;

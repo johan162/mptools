@@ -15,6 +15,7 @@
 ##      -p NUM    : Number of CPUs (2)
 ##      -M        : Mount ${HOME}/Devel inside node
 ##      -n        : No execution. Only display actions.
+##      -b        : Bridge the node. NOTE requires "local.bridged-network" to be specified
 ##      -q        : Quiet  (no output to stdout)
 ##      -v        : Print version and exit
 ##      -h        : Print help and exit

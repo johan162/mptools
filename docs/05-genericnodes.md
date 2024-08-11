@@ -10,13 +10,14 @@ NAME
 USAGE
    mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
-      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] ($ubuntuVer)
+      -r RELEASE: Valid ubuntu release [focal impish jammy Noble docker] ($ubuntuVer)
       -c FILE   : Cloud config file (${defaultCloudInit})
       -m SIZE   : Memory size, defaults (${memory})
       -d SIZE   : Disk size, defaults (${disk}GB)
       -p NUM    : Number of CPUs (${cpus})
       -M        : Mount ${HOME}/Devel inside node
       -n        : No execution. Only display actions.
+      -b        : Bridge the node. NOTE requires "local.bridged-network" to be specified
       -q        : Quiet  (no output to stdout)
       -v        : Print version and exit
       -h        : Print help and exit
@@ -30,6 +31,64 @@ under the default users (`ubuntu`) home directory.
 
 @note Use the `-n` flag to do a dryrun and see how the underlying call to `multipass`
 is made without actually executing it.
+
+
+## Bridged network
+
+
+One options requires some explanation and that is the bridged network options `-b`. 
+
+In order to make a node visible on the local network (outside the host the VM is running on)
+it is necessary to use a bridged network. 
+In order for this to work the multipass daemon must know which multipass-wide 
+preferred network should be bridged. This is a setup
+that cannot be automated since you must decide which of your networks should be
+bridged as most computer can, for example, have both a cable and WiFi network enabled.
+
+
+To list your available network used the `multipass networks` command. For example running this
+command on the computer I'm writing this on gives the following result
+
+```shell
+% multipass networks
+Name   Type       Description
+en0    ethernet   Ethernet 1
+en1    ethernet   Ethernet 2
+en2    wifi       Wi-Fi
+```
+
+Assuming I want to use the WiFi network as bridged I will then have to set the following option 
+in multipass
+
+```shell
+% multipass set local.bridged-network=en2
+```
+
+When nodes are later created with the `-b` option they will get an additional IP address on this
+network interface (from the network DNS server). You can confirm the 
+dual IPs by viewing the node details with the `info` command
+on a running node, e.g.
+
+```shell
+% multipass info ub24fm01
+Name:           ub24fm01
+State:          Running
+Snapshots:      0
+IPv4:           192.168.64.2
+                192.168.1.146
+Release:        Ubuntu 24.04 LTS
+Image hash:     dd8b691b3f0d (Ubuntu 24.04 LTS)
+CPU(s):         2
+Load:           0.08 0.02 0.01
+Disk usage:     3.3GiB out of 7.7GiB
+Memory usage:   319.5MiB out of 955.2MiB
+Mounts:         --
+```
+
+
+
+
+
 
 ## Cloud init files
 As mentioned in the previous section `mkmpnode` uses cloud-init files to configure
@@ -139,14 +198,14 @@ by the default cloud-init configuration which is set to `minidev-config.yaml` in
 By default, the created nodes will be based on the latest Ubuntu image (i.e. Ubuntu 22 LTS a.k.a. "jammy"
 at the time of writing).
 
-If we instead wanted to create a larger node, based on Ubuntu 18 LTS with a full development
+If we instead wanted to create a larger node, based on Ubuntu 24 LTS with a full development
 configuration we would instead need to call
 
 ```shell
-% mkmpnode -r bionic -m 4GB -c fulldev-config.yaml -d 10GB mynode
+% mkmpnode -r noble -m 4GB -c fulldev-config.yaml -d 10GB mynode
 ```
 
-This will create a node with 4GB RAM and a 10GB disk based on Ubuntu 18 (i.e. "bionic")
+This will create a node with 4GB RAM and a 10GB disk based on Ubuntu 24 (i.e. "Noble")
 
 ### Setting up a Postgresql DB-server
 

@@ -28,7 +28,6 @@ the makefile have three nodes predefined which are created as so
 
 the following three default nodes are then prepared:
 
-- ub18fs01 (Based on "bionic", a.k.a Ubuntu 18 LTS )
 - ub20fs01 (Based on "focal", a.k.a Ubuntu 20 LTS )
 - ub22fs01 (Based on "jammy", a.k.a Ubuntu 22 LTS )
 - ub24fs01 (Based on "noble", a.k.a Ubuntu 24 LTS )
@@ -52,12 +51,12 @@ In order to create a custom set of nodes the node names can either:
 An example will clarify this.
 
 Assume that we instead wanted to create two large Ubuntu 22 nodes with full
-development configuration and one X-Large Ubuntu 18 node with just the
+development configuration and one X-Large Ubuntu 24 node with just the
 minimal dev environment. We can then  override the `$(NODES)` makefile
 variable on the command line as so
 
 ```shell
-% make NODES="ub22fl11 ub22fl12 ub18mx13" node
+% make NODES="ub22fl11 ub22fl12 ub24mx13" node
 ```
 
 The makefile will "under the hood" then make the following three calls to the
@@ -66,11 +65,11 @@ actual node creating script
 ```shell
 ./mkmpnode.sh -r jammy -c cloud/fulldev-config.yaml -m 2GB -d 10GB ub22fl11
 ./mkmpnode.sh -r jammy -c cloud/fulldev-config.yaml -m 2GB -d 10GB ub22fl12
-./mkmpnode.sh -r bionic -c cloud/minidev-config.yaml -m 4GB -d 15GB ub18mx13
+./mkmpnode.sh -r noble -c cloud/minidev-config.yaml -m 4GB -d 15GB ub24mx13
 ```
 
 Which will create two more large "jammy" (Ubuntu 22 LTS) nodes and
-one x-large "bionic" (Ubuntu 18 LTS) node exactly as the node names
+one x-large "noble" (Ubuntu 24 LTS) node exactly as the node names
 specified.
 
 ## Makefile targets

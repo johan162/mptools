@@ -31,8 +31,9 @@ translated to the appropriate call (with all details) of `mkmpnode`.
 NAME
    mpn - Create multipass node by naming convention
 USAGE
-   mpn [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
+   mpn [-b] [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
 SYNOPSIS
+      -b        : Bridge the nodes (make them available on the local network)
       -h        : Print help and exit
       -n        : No execution. Only display actions.
       -s        : Silent
@@ -40,7 +41,7 @@ SYNOPSIS
 
 The node name will control the size and capacity of the node.
 ub<MAJOR_RELEASE><CONFIG><SIZE><NODE_NUMBER>
-MAJOR_RELEASE = [18|20|22]
+MAJOR_RELEASE = [20|22|24]
 CONFIG        = [f=Full dev|m=Minimal dev|b=Basic none-dev node]
 SIZE          = [s=small|m=medium|l=large|x=x-larg|h=humungous]
 NODE_NUMBER   = [0-9]{2}
@@ -55,13 +56,14 @@ Creates a multipass node where all the details have to be specified as options t
 NAME
    mkmpnode - Create multipass nodes with a specified (or default) cloud-init file
 USAGE
-   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-q] [-v] [-h] NODE_NAME
+   mkmpnode [-r RELEASE] [-c FILE] [-d SIZE] [-p CPUS] [-m SIZE] [-b] [-q] [-v] [-h] NODE_NAME
 SYNOPSIS
-      -r RELEASE: Valid ubuntu release [bionic focal impish jammy docker] (jammy)
+      -r RELEASE: Valid ubuntu release [focal impish jammy noble docker] (jammy)
       -c FILE   : Cloud config file (minidev-config.yaml)
       -m SIZE   : Memory size, defaults (500M)
       -d SIZE   : Disk size, defaults (5GGB)
       -p NUM    : Number of CPUs (2)
+      -b        : Bridge the node. NOTE requires "local.bridged-network" to be specified
       -M        : Mount /Users/ljp/Devel inside node
       -n        : No execution. Only display actions.
       -q        : Quiet  (no output to stdout)

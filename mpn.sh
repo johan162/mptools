@@ -9,6 +9,7 @@
 ##    mpn [-h] [-v] [-s] NODE_NAME [NODE_NAME [NODE_NAME ... ]]
 ## SYNOPSIS
 ##       -h        : Print help and exit
+##       -b        : Bridge the nodes (make them available on the local network)
 ##       -n        : No execution. Only display actions.
 ##       -s        : Silent
 ##       -v        : Print version and exit
